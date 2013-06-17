@@ -1,8 +1,11 @@
-package io.latent.storm.rabbitmq;
+package io.latent.storm.rabbitmq.config;
 
 import com.rabbitmq.client.ConnectionFactory;
 
 import java.io.Serializable;
+import java.util.Map;
+
+import static io.latent.storm.rabbitmq.config.ConfigUtils.*;
 
 public class ConnectionConfig implements Serializable {
   private final String host;
@@ -19,12 +22,7 @@ public class ConnectionConfig implements Serializable {
   public ConnectionConfig(String host,
                           String username,
                           String password) {
-    this.host = host;
-    this.port = ConnectionFactory.DEFAULT_AMQP_PORT;
-    this.username = username;
-    this.password = password;
-    this.virtualHost = ConnectionFactory.DEFAULT_VHOST;
-    this.heartBeat = 10;
+    this(host, ConnectionFactory.DEFAULT_AMQP_PORT, username, password, ConnectionFactory.DEFAULT_VHOST, 10);
   }
 
   public ConnectionConfig(String host,
@@ -74,5 +72,23 @@ public class ConnectionConfig implements Serializable {
     factory.setVirtualHost(virtualHost);
     factory.setRequestedHeartbeat(heartBeat);
     return factory;
+  }
+
+  public static ConnectionConfig getFromStormConfig(String key, Map<String, Object> stormConfig) {
+    return new ConnectionConfig(getFromMap(key, "host", stormConfig),
+                                getFromMapAsInt(key, "port", stormConfig),
+                                getFromMap(key, "username", stormConfig),
+                                getFromMap(key, "password", stormConfig),
+                                getFromMap(key, "virtualhost", stormConfig),
+                                getFromMapAsInt(key, "heartbeat", stormConfig));
+  }
+
+  public void addToStormConfig(String key, Map<String, Object> stormConfig) {
+    addToMap(key, "host", stormConfig, host);
+    addToMap(key, "port", stormConfig, port);
+    addToMap(key, "username", stormConfig, username);
+    addToMap(key, "password", stormConfig, password);
+    addToMap(key, "virtualhost", stormConfig, virtualHost);
+    addToMap(key, "heartbeat", stormConfig, heartBeat);
   }
 }

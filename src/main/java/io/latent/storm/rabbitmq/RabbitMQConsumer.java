@@ -1,17 +1,19 @@
 package io.latent.storm.rabbitmq;
 
 import com.rabbitmq.client.*;
+import io.latent.storm.rabbitmq.config.ConnectionConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.Serializable;
 
 /**
  * An abstraction on RabbitMQ client API to encapsulate interaction with RabbitMQ and de-couple Storm API from RabbitMQ API.
  *
  * @author peter@latent.io
  */
-public class RabbitMQConsumer {
+public class RabbitMQConsumer implements Serializable {
   private final ConnectionFactory connectionFactory;
   private final int prefetchCount;
   private final String queueName;
@@ -33,6 +35,8 @@ public class RabbitMQConsumer {
                           boolean autoAck,
                           Declarator declarator,
                           ErrorReporter errorReporter) {
+    if (requeueOnFail && autoAck) throw new IllegalArgumentException("Cannot requeue on fail when in autoacking mode");
+
     this.connectionFactory = connectionConfig.asConnectionFactory();
     this.prefetchCount = prefetchCount;
     this.queueName = queueName;

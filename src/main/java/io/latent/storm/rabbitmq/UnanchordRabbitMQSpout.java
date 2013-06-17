@@ -12,8 +12,14 @@ import java.util.List;
  * @author peter@latent.io
  */
 public class UnanchordRabbitMQSpout extends RabbitMQSpout {
-  public UnanchordRabbitMQSpout(String configKey) {
-    super(configKey);
+
+  public UnanchordRabbitMQSpout(String configKey, MessageScheme scheme)
+  {
+    super(configKey, scheme);
+  }
+
+  public UnanchordRabbitMQSpout(String configKey, MessageScheme scheme, Declarator declarator) {
+    super(configKey, scheme, declarator);
   }
 
   @Override

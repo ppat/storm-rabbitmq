@@ -7,10 +7,23 @@ import java.util.List;
 
 public class MultiStreamSpout extends RabbitMQSpout {
   private final MultiStreamCoordinator streamCoordinator;
+  private final MessageScheme scheme;
 
   public MultiStreamSpout(String configKey,
-                          MultiStreamCoordinator streamCoordinator) {
-    super(configKey);
+                          MessageScheme scheme,
+                          MultiStreamCoordinator streamCoordinator)
+  {
+    super(configKey, scheme);
+    this.scheme = scheme;
+    this.streamCoordinator = streamCoordinator;
+  }
+
+  public MultiStreamSpout(String configKey,
+                          MessageScheme scheme,
+                          MultiStreamCoordinator streamCoordinator,
+                          Declarator declarator) {
+    super(configKey, scheme, declarator);
+    this.scheme = scheme;
     this.streamCoordinator = streamCoordinator;
   }
 
@@ -25,7 +38,7 @@ public class MultiStreamSpout extends RabbitMQSpout {
   @Override
   public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
     for (String stream : streamCoordinator.streamNames()) {
-      outputFieldsDeclarer.declareStream(stream, consumerConfig.getScheme().getOutputFields());
+      outputFieldsDeclarer.declareStream(stream, scheme.getOutputFields());
     }
   }
 }

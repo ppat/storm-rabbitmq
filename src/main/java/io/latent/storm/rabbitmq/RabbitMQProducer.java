@@ -1,69 +1,73 @@
 package io.latent.storm.rabbitmq;
 
+import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.ReportedFailedException;
 import com.rabbitmq.client.*;
+import io.latent.storm.rabbitmq.config.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.Map;
 
-public class RabbitMQProducer {
-  private final ConnectionFactory connectionFactory;
-  private final String exchangeName;
+public class RabbitMQProducer implements Serializable {
+  private final String configKey;
   private final Declarator declarator;
-  private final String contentType;
-  private final String contentEncoding;
-  private final boolean persistent;
-  private final ErrorReporter reporter;
-  private final Logger logger;
 
+  private Logger logger;
+
+  private ProducerConfig producerConfig;
   private Connection connection;
   private Channel channel;
 
-  public RabbitMQProducer(ConnectionFactory connectionFactory,
-                          String exchangeName,
-                          Declarator declarator,
-                          String contentType,
-                          String contentEncoding,
-                          boolean persistent,
-                          ErrorReporter reporter) {
-    this.connectionFactory = connectionFactory;
-    this.exchangeName = exchangeName;
-    this.declarator = declarator;
-    this.contentType = contentType;
-    this.contentEncoding = contentEncoding;
-    this.persistent = persistent;
-    this.reporter = reporter;
-    this.logger = LoggerFactory.getLogger(RabbitMQProducer.class);
+  public RabbitMQProducer(String configKey)
+  {
+    this(configKey, new Declarator.NoOp());
   }
 
-  public void send(Message message) {
-    send(message, "");
+  public RabbitMQProducer(String configKey,
+                          Declarator declarator) {
+    this.configKey = configKey;
+    this.declarator = declarator;
   }
 
   public void send(Message message,
-                   String routingKey) throws ReportedFailedException {
+                   ErrorReporter reporter) {
+    send(message, "", reporter);
+  }
+
+  public void send(Message message,
+                   String routingKey,
+                   ErrorReporter reporter) throws ReportedFailedException {
     if (message == Message.NONE) return;
     reinitIfNecessary();
     try {
       AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
-                                                                .contentType(contentType)
-                                                                .contentEncoding(contentEncoding)
-                                                                .deliveryMode((persistent) ? 2 : 1)
+                                                                .contentType(producerConfig.getContentType())
+                                                                .contentEncoding(producerConfig.getContentEncoding())
+                                                                .deliveryMode((producerConfig.isPersistent()) ? 2 : 1)
                                                                 .build();
-      channel.basicPublish(exchangeName, routingKey, properties, message.getBody());
+      channel.basicPublish(producerConfig.getExchangeName(), routingKey, properties, message.getBody());
     } catch (AlreadyClosedException ace) {
       logger.error("already closed exception while attempting to send message", ace);
       reset();
-      throw new ReportedFailedException(ace);
+      reporter.reportError(ace);
     } catch (IOException ioe) {
       logger.error("io exception while attempting to send message", ioe);
       reset();
-      throw new ReportedFailedException(ioe);
+      reporter.reportError(ioe);
     }
   }
 
-  public void open() {
+  public void open(final Map config,
+                   final TopologyContext context) {
+    logger = LoggerFactory.getLogger(RabbitMQProducer.class);
+    producerConfig = ProducerConfig.getFromStormConfig(configKey, config);
+    internalOpen();
+  }
+
+  private void internalOpen() {
     try {
       connection = createConnection();
       channel = connection.createChannel();
@@ -71,8 +75,7 @@ public class RabbitMQProducer {
       // run any declaration prior to message sending
       declarator.execute(channel);
     } catch (Exception e) {
-      logger.error("could not open connection on exchange " + exchangeName);
-      reporter.reportError(e);
+      logger.error("could not open connection on exchange " + producerConfig.getExchangeName());
       reset();
     }
   }
@@ -102,21 +105,20 @@ public class RabbitMQProducer {
   private void reinitIfNecessary() {
     if (channel == null) {
       close();
-      open();
+      internalOpen();
     }
   }
 
   private Connection createConnection() throws IOException {
-    Connection connection = connectionFactory.newConnection();
+    Connection connection = producerConfig.getConnectionConfig().asConnectionFactory().newConnection();
     connection.addShutdownListener(new ShutdownListener() {
       @Override
       public void shutdownCompleted(ShutdownSignalException cause) {
         logger.error("shutdown signal received", cause);
-        reporter.reportError(cause);
         reset();
       }
     });
-    logger.info("connected to rabbitmq: " + connection + " for " + exchangeName);
+    logger.info("connected to rabbitmq: " + connection + " for " + producerConfig.getExchangeName());
     return connection;
   }
 }

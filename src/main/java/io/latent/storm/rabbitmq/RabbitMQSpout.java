@@ -4,6 +4,7 @@ import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
+import io.latent.storm.rabbitmq.config.ConsumerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,23 +21,31 @@ import java.util.Map;
  */
 public class RabbitMQSpout implements IRichSpout {
   private final String configKey;
+  private final MessageScheme scheme;
+  private final Declarator declarator;
 
-  protected ConsumerConfig consumerConfig;
+  private ConsumerConfig consumerConfig;
 
   private Logger logger;
   private RabbitMQConsumer consumer;
   private boolean active;
   private SpoutOutputCollector collector;
 
-  public RabbitMQSpout(String configKey) {
+  public RabbitMQSpout(String configKey, MessageScheme scheme) {
+    this(configKey, scheme, new Declarator.NoOp());
+  }
+
+  public RabbitMQSpout(String configKey, MessageScheme scheme, Declarator declarator) {
     this.configKey = configKey;
+    this.scheme = scheme;
+    this.declarator = declarator;
   }
 
   @Override
   public void open(final Map config,
                    final TopologyContext context,
                    final SpoutOutputCollector spoutOutputCollector) {
-    consumerConfig = (ConsumerConfig) config.get(configKey);
+    consumerConfig = ConsumerConfig.getFromStormConfig(configKey, config);
     ErrorReporter reporter = new ErrorReporter() {
       @Override
       public void reportError(Throwable error) {
@@ -48,8 +57,9 @@ public class RabbitMQSpout implements IRichSpout {
                                     consumerConfig.getQueueName(),
                                     consumerConfig.isRequeueOnFail(),
                                     consumerConfig.isAutoAck(),
-                                    consumerConfig.getDeclarator(),
+                                    declarator,
                                     reporter);
+    scheme.open(config, context);
     consumer.open();
     logger = LoggerFactory.getLogger(RabbitMQSpout.class);
     collector = spoutOutputCollector;
@@ -58,6 +68,7 @@ public class RabbitMQSpout implements IRichSpout {
   @Override
   public void close() {
     consumer.close();
+    scheme.close();
   }
 
   @Override
@@ -94,7 +105,7 @@ public class RabbitMQSpout implements IRichSpout {
   private List<Object> extractTuple(Message message) {
     long deliveryTag = getDeliveryTag(message);
     try {
-      List<Object> tuple = consumerConfig.getScheme().deserialize(message.getBody());
+      List<Object> tuple = scheme.deserialize(message.getBody());
       if (tuple != null && !tuple.isEmpty()) {
         return tuple;
       }
@@ -119,7 +130,7 @@ public class RabbitMQSpout implements IRichSpout {
 
   @Override
   public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-    outputFieldsDeclarer.declare(consumerConfig.getScheme().getOutputFields());
+    outputFieldsDeclarer.declare(scheme.getOutputFields());
   }
 
   @Override
