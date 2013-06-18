@@ -31,11 +31,6 @@ public final class ConsumerConfigBuilder
     return this;
   }
 
-  public ConsumerConfigBuilder autoAck() {
-    this.requeueOnFail = true;
-    return this;
-  }
-
   public ConsumerConfig build() {
     return new ConsumerConfig(connectionConfig, prefetchCount, queueName, requeueOnFail);
   }

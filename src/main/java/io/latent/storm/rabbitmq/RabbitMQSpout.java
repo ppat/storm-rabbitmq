@@ -2,14 +2,13 @@ package io.latent.storm.rabbitmq;
 
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseRichSpout;
 import io.latent.storm.rabbitmq.config.ConsumerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +18,7 @@ import java.util.Map;
  * 
  * @author peter@latent.io
  */
-public class RabbitMQSpout implements IRichSpout {
+public class RabbitMQSpout extends BaseRichSpout {
   private final String configKey;
   private final MessageScheme scheme;
   private final Declarator declarator;
@@ -28,7 +27,6 @@ public class RabbitMQSpout implements IRichSpout {
 
   private Logger logger;
   private RabbitMQConsumer consumer;
-  private boolean active;
   private SpoutOutputCollector collector;
 
   public RabbitMQSpout(String configKey, MessageScheme scheme) {
@@ -75,29 +73,16 @@ public class RabbitMQSpout implements IRichSpout {
   public void close() {
     consumer.close();
     scheme.close();
-  }
-
-  @Override
-  public void activate() {
-    active = true;
-    logger.info(String.format("rabbitmq spout for %s activated", consumerConfig.getQueueName()));
-  }
-
-  @Override
-  public void deactivate() {
-    active = false;
-    logger.info(String.format("rabbitmq spout for %s deactivated", consumerConfig.getQueueName()));
+    super.close();
   }
 
   @Override
   public void nextTuple() {
-    if (active) {
-      Message message = consumer.nextMessage();
-      if (message != Message.NONE) {
-        List<Object> tuple = extractTuple(message);
-        if (!tuple.isEmpty()) {
-          emit(tuple, message, collector);
-        }
+    Message message = consumer.nextMessage();
+    if (message != Message.NONE) {
+      List<Object> tuple = extractTuple(message);
+      if (!tuple.isEmpty()) {
+        emit(tuple, message, collector);
       }
     }
   }
@@ -115,9 +100,9 @@ public class RabbitMQSpout implements IRichSpout {
       if (tuple != null && !tuple.isEmpty()) {
         return tuple;
       }
-      logger.warn("Deserialization error for message " + deliveryTag);
+      logger.warn("Deserialization error for msgId " + deliveryTag);
     } catch (Exception e) {
-      logger.warn("Deserialization error for message " + deliveryTag, e);
+      logger.warn("Deserialization error for msgId " + deliveryTag, e);
     }
     // get the malformed message out of the way by dead-lettering (if dead-lettering is configured) and move on
     consumer.deadLetter(deliveryTag);
@@ -126,22 +111,17 @@ public class RabbitMQSpout implements IRichSpout {
 
   @Override
   public void ack(Object msgId) {
-    consumer.ack((Long) msgId);
+    if (msgId instanceof Long) consumer.ack((Long) msgId);
   }
 
   @Override
   public void fail(Object msgId) {
-    consumer.fail((Long) msgId);
+    if (msgId instanceof Long) consumer.fail((Long) msgId);
   }
 
   @Override
   public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
     outputFieldsDeclarer.declare(scheme.getOutputFields());
-  }
-
-  @Override
-  public Map<String, Object> getComponentConfiguration() {
-    return new HashMap<String, Object>();
   }
 
   protected long getDeliveryTag(Message message) {

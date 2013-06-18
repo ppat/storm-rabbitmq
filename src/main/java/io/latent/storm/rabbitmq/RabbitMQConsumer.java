@@ -67,9 +67,10 @@ public class RabbitMQConsumer implements Serializable {
 
   public void ack(Long msgId) {
     try {
+      logger.info(String.format("acking msgId %d on %s", msgId, queueName));
       channel.basicAck(msgId, false);
     } catch (Exception e) {
-      logger.error("failed to ack for delivery-tag: " + msgId, e);
+      logger.error("could not ack for msgId: " + msgId, e);
       reporter.reportError(e);
     }
   }
@@ -83,18 +84,20 @@ public class RabbitMQConsumer implements Serializable {
 
   public void failWithRedelivery(Long msgId) {
     try {
+      logger.info(String.format("failing with redelivery for msgId %d on %s", msgId, queueName));
       channel.basicReject(msgId, true);
     } catch (Exception e) {
-      logger.error("failed basicReject with redelivery for delivery-tag: " + msgId, e);
+      logger.error("could not fail with redelivery for msgId: " + msgId, e);
       reporter.reportError(e);
     }
   }
 
   public void deadLetter(Long msgId) {
     try {
+      logger.info(String.format("deadlettering msgId %d on %s", msgId, queueName));
       channel.basicReject(msgId, false);
     } catch (Exception e) {
-      logger.error("failed basicReject with dead-lettering (when configured) for delivery-tag: " + msgId, e);
+      logger.error("could not fail with dead-lettering (when configured) for msgId: " + msgId, e);
       reporter.reportError(e);
     }
   }
