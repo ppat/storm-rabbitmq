@@ -10,14 +10,11 @@ public class ConsumerConfig implements Serializable {
   private final int prefetchCount;
   private final String queueName;
   private final boolean requeueOnFail;
-  private final boolean autoAck;
 
   public ConsumerConfig(ConnectionConfig connectionConfig,
                         int prefetchCount,
                         String queueName,
-                        boolean requeueOnFail,
-                        boolean autoAck) {
-    if (requeueOnFail && autoAck) throw new IllegalArgumentException("Cannot requeue on fail when auto acking is enabled");
+                        boolean requeueOnFail) {
     if (connectionConfig == null || prefetchCount < 1) {
       throw new IllegalArgumentException("Invalid configuration");
     }
@@ -26,7 +23,6 @@ public class ConsumerConfig implements Serializable {
     this.prefetchCount = prefetchCount;
     this.queueName = queueName;
     this.requeueOnFail = requeueOnFail;
-    this.autoAck = autoAck;
   }
 
   public ConnectionConfig getConnectionConfig() {
@@ -45,17 +41,12 @@ public class ConsumerConfig implements Serializable {
     return requeueOnFail;
   }
 
-  public boolean isAutoAck() {
-    return autoAck;
-  }
-
   public static ConsumerConfig getFromStormConfig(String key, Map<String, Object> stormConfig) {
     ConnectionConfig connectionConfig = ConnectionConfig.getFromStormConfig(key, stormConfig);
     return new ConsumerConfig(connectionConfig,
                               getFromMapAsInt(key, "prefetchCount", stormConfig),
                               getFromMap(key, "queueName", stormConfig),
-                              getFromMapAsBoolean(key, "requeueOnFail", stormConfig),
-                              getFromMapAsBoolean(key, "autoAck", stormConfig));
+                              getFromMapAsBoolean(key, "requeueOnFail", stormConfig));
   }
 
   public void addToStormConfig(String key, Map<String, Object> map) {
@@ -63,7 +54,6 @@ public class ConsumerConfig implements Serializable {
     addToMap(key, "prefetchCount", map, prefetchCount);
     addToMap(key, "queueName", map, queueName);
     addToMap(key, "requeueOnFail", map, requeueOnFail);
-    addToMap(key, "autoAck", map, autoAck);
   }
 }
 

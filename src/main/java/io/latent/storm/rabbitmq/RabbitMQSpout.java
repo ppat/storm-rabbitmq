@@ -49,20 +49,26 @@ public class RabbitMQSpout implements IRichSpout {
     ErrorReporter reporter = new ErrorReporter() {
       @Override
       public void reportError(Throwable error) {
-        collector.reportError(error);
+        spoutOutputCollector.reportError(error);
       }
     };
-    consumer = new RabbitMQConsumer(consumerConfig.getConnectionConfig(),
-                                    consumerConfig.getPrefetchCount(),
-                                    consumerConfig.getQueueName(),
-                                    consumerConfig.isRequeueOnFail(),
-                                    consumerConfig.isAutoAck(),
-                                    declarator,
-                                    reporter);
+    consumer = loadConsumer(declarator, reporter, consumerConfig);
     scheme.open(config, context);
     consumer.open();
     logger = LoggerFactory.getLogger(RabbitMQSpout.class);
     collector = spoutOutputCollector;
+  }
+
+  protected RabbitMQConsumer loadConsumer(Declarator declarator,
+                                          ErrorReporter reporter,
+                                          ConsumerConfig config)
+  {
+    return new RabbitMQConsumer(config.getConnectionConfig(),
+                                config.getPrefetchCount(),
+                                config.getQueueName(),
+                                config.isRequeueOnFail(),
+                                declarator,
+                                reporter);
   }
 
   @Override

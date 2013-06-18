@@ -18,7 +18,6 @@ public class RabbitMQConsumer implements Serializable {
   private final int prefetchCount;
   private final String queueName;
   private final boolean requeueOnFail;
-  private final boolean autoAck;
   private final Declarator declarator;
   private final ErrorReporter reporter;
   private final Logger logger;
@@ -32,16 +31,12 @@ public class RabbitMQConsumer implements Serializable {
                           int prefetchCount,
                           String queueName,
                           boolean requeueOnFail,
-                          boolean autoAck,
                           Declarator declarator,
                           ErrorReporter errorReporter) {
-    if (requeueOnFail && autoAck) throw new IllegalArgumentException("Cannot requeue on fail when in autoacking mode");
-
     this.connectionFactory = connectionConfig.asConnectionFactory();
     this.prefetchCount = prefetchCount;
     this.queueName = queueName;
     this.requeueOnFail = requeueOnFail;
-    this.autoAck = autoAck;
     this.declarator = declarator;
 
     this.reporter = errorReporter;
@@ -53,9 +48,9 @@ public class RabbitMQConsumer implements Serializable {
     try {
       return Message.forDelivery(consumer.nextDelivery());
     } catch (ShutdownSignalException sse) {
+      reset();
       logger.error("shutdown signal received while attempting to get next message", sse);
       reporter.reportError(sse);
-      reset();
       return Message.NONE;
     } catch (InterruptedException ie) {
       /* nothing to do. timed out waiting for message */
@@ -63,15 +58,14 @@ public class RabbitMQConsumer implements Serializable {
       return Message.NONE;
     } catch (ConsumerCancelledException cce) {
       /* if the queue on the broker was deleted or node in the cluster containing the queue failed */
+      reset();
       logger.error("consumer got cancelled while attempting to get next message", cce);
       reporter.reportError(cce);
-      reset();
       return Message.NONE;
     }
   }
 
   public void ack(Long msgId) {
-    if (autoAck) return;
     try {
       channel.basicAck(msgId, false);
     } catch (Exception e) {
@@ -88,10 +82,6 @@ public class RabbitMQConsumer implements Serializable {
   }
 
   public void failWithRedelivery(Long msgId) {
-    if (autoAck) {
-      logger.warn(String.format("auto-acking enabled so failed message (delivery-tag=%d) will not be retried", msgId));
-      return;
-    }
     try {
       channel.basicReject(msgId, true);
     } catch (Exception e) {
@@ -101,7 +91,6 @@ public class RabbitMQConsumer implements Serializable {
   }
 
   public void deadLetter(Long msgId) {
-    if (autoAck) return;
     try {
       channel.basicReject(msgId, false);
     } catch (Exception e) {
@@ -122,12 +111,17 @@ public class RabbitMQConsumer implements Serializable {
       declarator.execute(channel);
 
       consumer = new QueueingConsumer(channel);
-      consumerTag = channel.basicConsume(queueName, autoAck, consumer);
+      consumerTag = channel.basicConsume(queueName, isAutoAcking(), consumer);
     } catch (Exception e) {
+      reset();
       logger.error("could not open listener on queue " + queueName);
       reporter.reportError(e);
-      reset();
     }
+  }
+
+  protected boolean isAutoAcking()
+  {
+    return false;
   }
 
   public void close() {

@@ -6,7 +6,6 @@ public final class ConsumerConfigBuilder
   private int prefetchCount;
   private String queueName;
   private boolean requeueOnFail = true;
-  private boolean autoAck = false;
 
   public ConsumerConfigBuilder()
   {
@@ -38,6 +37,6 @@ public final class ConsumerConfigBuilder
   }
 
   public ConsumerConfig build() {
-    return new ConsumerConfig(connectionConfig, prefetchCount, queueName, requeueOnFail, autoAck);
+    return new ConsumerConfig(connectionConfig, prefetchCount, queueName, requeueOnFail);
   }
 }

@@ -1,6 +1,7 @@
 package io.latent.storm.rabbitmq;
 
 import backtype.storm.spout.SpoutOutputCollector;
+import io.latent.storm.rabbitmq.config.ConsumerConfig;
 
 import java.util.List;
 
@@ -20,6 +21,19 @@ public class UnanchordRabbitMQSpout extends RabbitMQSpout {
 
   public UnanchordRabbitMQSpout(String configKey, MessageScheme scheme, Declarator declarator) {
     super(configKey, scheme, declarator);
+  }
+
+  @Override
+  protected RabbitMQConsumer loadConsumer(Declarator declarator,
+                                          ErrorReporter reporter,
+                                          ConsumerConfig config)
+  {
+    return new UnanchoredConsumer(config.getConnectionConfig(),
+                                  config.getPrefetchCount(),
+                                  config.getQueueName(),
+                                  config.isRequeueOnFail(),
+                                  declarator,
+                                  reporter);
   }
 
   @Override
