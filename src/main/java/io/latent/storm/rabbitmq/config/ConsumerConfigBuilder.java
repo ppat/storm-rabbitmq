@@ -5,7 +5,7 @@ public final class ConsumerConfigBuilder
   private ConnectionConfig connectionConfig;
   private int prefetchCount;
   private String queueName;
-  private boolean requeueOnFail = true;
+  private boolean requeueOnFail;
 
   public ConsumerConfigBuilder()
   {
