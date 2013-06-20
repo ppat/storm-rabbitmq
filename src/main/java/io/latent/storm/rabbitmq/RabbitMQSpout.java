@@ -103,6 +103,7 @@ public class RabbitMQSpout extends BaseRichSpout {
       logger.warn("Deserialization error for msgId " + deliveryTag);
     } catch (Exception e) {
       logger.warn("Deserialization error for msgId " + deliveryTag, e);
+      collector.reportError(e);
     }
     // get the malformed message out of the way by dead-lettering (if dead-lettering is configured) and move on
     consumer.deadLetter(deliveryTag);

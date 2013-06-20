@@ -25,16 +25,18 @@ public class Message {
 
 
   public static class DeliveredMessage extends Message {
-    private QueueingConsumer.Delivery delivery;
+    private final boolean redelivery;
+    private final long deliveryTag;
 
     private DeliveredMessage(QueueingConsumer.Delivery delivery) {
       super(delivery.getBody());
-      this.delivery = delivery;
+      redelivery = delivery.getEnvelope().isRedeliver();
+      deliveryTag = delivery.getEnvelope().getDeliveryTag();
     }
 
-    public boolean isRedelivery() { return delivery.getEnvelope().isRedeliver(); }
+    public boolean isRedelivery() { return redelivery; }
 
-    public long getDeliveryTag() { return delivery.getEnvelope().getDeliveryTag(); }
+    public long getDeliveryTag() { return deliveryTag; }
   }
 
   public static class None extends Message {
