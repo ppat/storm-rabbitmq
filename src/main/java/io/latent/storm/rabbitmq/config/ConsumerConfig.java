@@ -1,6 +1,7 @@
 package io.latent.storm.rabbitmq.config;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 import static io.latent.storm.rabbitmq.config.ConfigUtils.*;
@@ -41,19 +42,21 @@ public class ConsumerConfig implements Serializable {
     return requeueOnFail;
   }
 
-  public static ConsumerConfig getFromStormConfig(String key, Map<String, Object> stormConfig) {
-    ConnectionConfig connectionConfig = ConnectionConfig.getFromStormConfig(key, stormConfig);
+  public static ConsumerConfig getFromStormConfig(String keyPrefix, Map<String, Object> stormConfig) {
+    ConnectionConfig connectionConfig = ConnectionConfig.getFromStormConfig(keyPrefix, stormConfig);
     return new ConsumerConfig(connectionConfig,
-                              getFromMapAsInt(key, "prefetchCount", stormConfig),
-                              getFromMap(key, "queueName", stormConfig),
-                              getFromMapAsBoolean(key, "requeueOnFail", stormConfig));
+                              getFromMapAsInt(keyPrefix, "prefetchCount", stormConfig),
+                              getFromMap(keyPrefix, "queueName", stormConfig),
+                              getFromMapAsBoolean(keyPrefix, "requeueOnFail", stormConfig));
   }
 
-  public void addToStormConfig(String key, Map<String, Object> map) {
-    connectionConfig.addToStormConfig(key, map);
-    addToMap(key, "prefetchCount", map, prefetchCount);
-    addToMap(key, "queueName", map, queueName);
-    addToMap(key, "requeueOnFail", map, requeueOnFail);
+  public Map<String, Object> asMap(String keyPrefix) {
+    Map<String, Object> map = new HashMap<String, Object>();
+    map.putAll(connectionConfig.asMap(keyPrefix));
+    addToMap(keyPrefix, "prefetchCount", map, prefetchCount);
+    addToMap(keyPrefix, "queueName", map, queueName);
+    addToMap(keyPrefix, "requeueOnFail", map, requeueOnFail);
+    return map;
   }
 }
 

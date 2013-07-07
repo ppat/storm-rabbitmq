@@ -1,6 +1,7 @@
 package io.latent.storm.rabbitmq.config;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 import static io.latent.storm.rabbitmq.config.ConfigUtils.*;
@@ -51,20 +52,22 @@ public class ProducerConfig implements Serializable
     return persistent;
   }
 
-  public static ProducerConfig getFromStormConfig(String key, Map<String, Object> stormConfig) {
-    ConnectionConfig connectionConfig = ConnectionConfig.getFromStormConfig(key, stormConfig);
+  public static ProducerConfig getFromStormConfig(String keyPrefix, Map<String, Object> stormConfig) {
+    ConnectionConfig connectionConfig = ConnectionConfig.getFromStormConfig(keyPrefix, stormConfig);
     return new ProducerConfig(connectionConfig,
-                              getFromMap(key, "exchangeName", stormConfig),
-                              getFromMap(key, "contentType", stormConfig),
-                              getFromMap(key, "contentEncoding", stormConfig),
-                              getFromMapAsBoolean(key, "persistent", stormConfig));
+                              getFromMap(keyPrefix, "exchangeName", stormConfig),
+                              getFromMap(keyPrefix, "contentType", stormConfig),
+                              getFromMap(keyPrefix, "contentEncoding", stormConfig),
+                              getFromMapAsBoolean(keyPrefix, "persistent", stormConfig));
   }
 
-  public void addToStormConfig(String key, Map<String, Object> map) {
-    connectionConfig.addToStormConfig(key, map);
-    addToMap(key, "exchangeName", map, exchangeName);
-    addToMap(key, "contentType", map, contentType);
-    addToMap(key, "contentEncoding", map, contentEncoding);
-    addToMap(key, "persistent", map, persistent);
+  public Map<String, Object> asMap(String keyPrefix) {
+    Map<String, Object> map = new HashMap<String, Object>();
+    map.putAll(connectionConfig.asMap(keyPrefix));
+    addToMap(keyPrefix, "exchangeName", map, exchangeName);
+    addToMap(keyPrefix, "contentType", map, contentType);
+    addToMap(keyPrefix, "contentEncoding", map, contentEncoding);
+    addToMap(keyPrefix, "persistent", map, persistent);
+    return map;
   }
 }

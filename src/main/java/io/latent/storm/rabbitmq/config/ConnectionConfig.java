@@ -3,6 +3,7 @@ package io.latent.storm.rabbitmq.config;
 import com.rabbitmq.client.ConnectionFactory;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 import static io.latent.storm.rabbitmq.config.ConfigUtils.*;
@@ -74,21 +75,23 @@ public class ConnectionConfig implements Serializable {
     return factory;
   }
 
-  public static ConnectionConfig getFromStormConfig(String key, Map<String, Object> stormConfig) {
-    return new ConnectionConfig(getFromMap(key, "host", stormConfig),
-                                getFromMapAsInt(key, "port", stormConfig),
-                                getFromMap(key, "username", stormConfig),
-                                getFromMap(key, "password", stormConfig),
-                                getFromMap(key, "virtualhost", stormConfig),
-                                getFromMapAsInt(key, "heartbeat", stormConfig));
+  public static ConnectionConfig getFromStormConfig(String keyPrefix, Map<String, Object> stormConfig) {
+    return new ConnectionConfig(getFromMap(keyPrefix, "host", stormConfig),
+                                getFromMapAsInt(keyPrefix, "port", stormConfig),
+                                getFromMap(keyPrefix, "username", stormConfig),
+                                getFromMap(keyPrefix, "password", stormConfig),
+                                getFromMap(keyPrefix, "virtualhost", stormConfig),
+                                getFromMapAsInt(keyPrefix, "heartbeat", stormConfig));
   }
 
-  public void addToStormConfig(String key, Map<String, Object> stormConfig) {
-    addToMap(key, "host", stormConfig, host);
-    addToMap(key, "port", stormConfig, port);
-    addToMap(key, "username", stormConfig, username);
-    addToMap(key, "password", stormConfig, password);
-    addToMap(key, "virtualhost", stormConfig, virtualHost);
-    addToMap(key, "heartbeat", stormConfig, heartBeat);
+  public Map<String, Object> asMap(String keyPrefix) {
+    Map<String, Object> map = new HashMap<String, Object>();
+    addToMap(keyPrefix, "host", map, host);
+    addToMap(keyPrefix, "port", map, port);
+    addToMap(keyPrefix, "username", map, username);
+    addToMap(keyPrefix, "password", map, password);
+    addToMap(keyPrefix, "virtualhost", map, virtualHost);
+    addToMap(keyPrefix, "heartbeat", map, heartBeat);
+    return map;
   }
 }
