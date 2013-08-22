@@ -22,8 +22,7 @@ You will need an implementation of ```backtype.storm.spout.Scheme``` to deserial
 - Configuring connection to RabbitMQ. If ```requeueOnFail``` is turned on, messages will be redelivered if they fail anywhere within the topology.
 
 ```java
-    /* host, port, username, password, virtualHost, heartBeat */
-    ConnectionConfig connectionConfig = new ConnectionConfig("localhost", 5672, "guest", "guest", ConnectionFactory.DEFAULT_VHOST, 10);
+    ConnectionConfig connectionConfig = new ConnectionConfig("localhost", 5672, "guest", "guest", ConnectionFactory.DEFAULT_VHOST, 10); // host, port, username, password, virtualHost, heartBeat 
     ConsumerConfig spoutConfig = new ConsumerConfigBuilder().connection(connectionConfig)
         .queue("your.rabbitmq.queue")
         .prefetch(200)
