@@ -75,6 +75,7 @@ public class CustomStormDeclarator implements Declarator
   @Override
   public void execute(Channel channel)
   {
+    // you're given a RabbitMQ Channel so you're free to wire up your exchange/queue bindins as you see fit
     try {
       Map<String, Object> map = new HashMap<>();
       channel.queueDeclare(queue, true, false, false, map);
