@@ -92,5 +92,7 @@ public class CustomStormDeclarator implements Declarator
 And then pass it to spout constructor. 
 ```
 Declarator declarator = new CustomStormDeclarator("your.exchange", "your.rabbitmq.queue", "routing.key");
-IRichSpout spout = new UnanchordRabbitMQSpout(scheme, declarator);
+IRichSpout spout = new RabbitMQSpout(scheme, declarator);
 ``` 
+The other spouts also take in the declarator as a parameter.
+
