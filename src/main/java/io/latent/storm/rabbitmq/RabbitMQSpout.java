@@ -1,5 +1,6 @@
 package io.latent.storm.rabbitmq;
 
+import backtype.storm.spout.Scheme;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -19,22 +20,26 @@ import java.util.Map;
  * @author peter@latent.io
  */
 public class RabbitMQSpout extends BaseRichSpout {
-  private final String configKey;
   private final MessageScheme scheme;
   private final Declarator declarator;
-
-  private ConsumerConfig consumerConfig;
 
   private Logger logger;
   private RabbitMQConsumer consumer;
   private SpoutOutputCollector collector;
 
-  public RabbitMQSpout(String configKey, MessageScheme scheme) {
-    this(configKey, scheme, new Declarator.NoOp());
+  public RabbitMQSpout(MessageScheme scheme) {
+    this(scheme, new Declarator.NoOp());
   }
 
-  public RabbitMQSpout(String configKey, MessageScheme scheme, Declarator declarator) {
-    this.configKey = configKey;
+  public RabbitMQSpout(Scheme scheme) {
+    this(MessageScheme.Builder.from(scheme), new Declarator.NoOp());
+  }
+
+  public RabbitMQSpout(Scheme scheme, Declarator declarator) {
+    this(MessageScheme.Builder.from(scheme), declarator);
+  }
+
+  public RabbitMQSpout(MessageScheme scheme, Declarator declarator) {
     this.scheme = scheme;
     this.declarator = declarator;
   }
@@ -43,7 +48,7 @@ public class RabbitMQSpout extends BaseRichSpout {
   public void open(final Map config,
                    final TopologyContext context,
                    final SpoutOutputCollector spoutOutputCollector) {
-    consumerConfig = ConsumerConfig.getFromStormConfig(configKey, config);
+    ConsumerConfig consumerConfig = ConsumerConfig.getFromStormConfig(config);
     ErrorReporter reporter = new ErrorReporter() {
       @Override
       public void reportError(Throwable error) {

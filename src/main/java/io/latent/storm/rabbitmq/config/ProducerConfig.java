@@ -52,22 +52,22 @@ public class ProducerConfig implements Serializable
     return persistent;
   }
 
-  public static ProducerConfig getFromStormConfig(String keyPrefix, Map<String, Object> stormConfig) {
-    ConnectionConfig connectionConfig = ConnectionConfig.getFromStormConfig(keyPrefix, stormConfig);
+  public static ProducerConfig getFromStormConfig(Map<String, Object> stormConfig) {
+    ConnectionConfig connectionConfig = ConnectionConfig.getFromStormConfig(stormConfig);
     return new ProducerConfig(connectionConfig,
-                              getFromMap(keyPrefix, "exchangeName", stormConfig),
-                              getFromMap(keyPrefix, "contentType", stormConfig),
-                              getFromMap(keyPrefix, "contentEncoding", stormConfig),
-                              getFromMapAsBoolean(keyPrefix, "persistent", stormConfig));
+                              getFromMap("rabbitmq.exchangeName", stormConfig),
+                              getFromMap("rabbitmq.contentType", stormConfig),
+                              getFromMap("rabbitmq.contentEncoding", stormConfig),
+                              getFromMapAsBoolean("rabbitmq.persistent", stormConfig));
   }
 
-  public Map<String, Object> asMap(String keyPrefix) {
+  public Map<String, Object> asMap() {
     Map<String, Object> map = new HashMap<String, Object>();
-    map.putAll(connectionConfig.asMap(keyPrefix));
-    addToMap(keyPrefix, "exchangeName", map, exchangeName);
-    addToMap(keyPrefix, "contentType", map, contentType);
-    addToMap(keyPrefix, "contentEncoding", map, contentEncoding);
-    addToMap(keyPrefix, "persistent", map, persistent);
+    map.putAll(connectionConfig.asMap());
+    addToMap("rabbitmq.exchangeName", map, exchangeName);
+    addToMap("rabbitmq.contentType", map, contentType);
+    addToMap("rabbitmq.contentEncoding", map, contentEncoding);
+    addToMap("rabbitmq.persistent", map, persistent);
     return map;
   }
 }

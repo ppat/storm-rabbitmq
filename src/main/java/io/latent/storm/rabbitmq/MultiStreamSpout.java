@@ -1,5 +1,6 @@
 package io.latent.storm.rabbitmq;
 
+import backtype.storm.spout.Scheme;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.topology.OutputFieldsDeclarer;
 
@@ -7,24 +8,33 @@ import java.util.List;
 
 public class MultiStreamSpout extends RabbitMQSpout {
   private final MultiStreamCoordinator streamCoordinator;
-  private final MessageScheme scheme;
+  private final Scheme scheme;
 
-  public MultiStreamSpout(String configKey,
-                          MessageScheme scheme,
+  public MultiStreamSpout(Scheme scheme,
                           MultiStreamCoordinator streamCoordinator)
   {
-    super(configKey, scheme);
+    super(scheme);
     this.scheme = scheme;
     this.streamCoordinator = streamCoordinator;
   }
 
-  public MultiStreamSpout(String configKey,
-                          MessageScheme scheme,
+  public MultiStreamSpout(MessageScheme scheme,
+                          MultiStreamCoordinator streamCoordinator) {
+    this((Scheme) scheme, streamCoordinator);
+  }
+
+  public MultiStreamSpout(Scheme scheme,
                           MultiStreamCoordinator streamCoordinator,
                           Declarator declarator) {
-    super(configKey, scheme, declarator);
+    super(scheme, declarator);
     this.scheme = scheme;
     this.streamCoordinator = streamCoordinator;
+  }
+
+  public MultiStreamSpout(MessageScheme scheme,
+                          Declarator declarator,
+                          MultiStreamCoordinator streamCoordinator) {
+    this((Scheme) scheme, streamCoordinator, declarator);
   }
 
   @Override

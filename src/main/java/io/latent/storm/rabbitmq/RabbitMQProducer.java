@@ -11,7 +11,6 @@ import java.io.Serializable;
 import java.util.Map;
 
 public class RabbitMQProducer implements Serializable {
-  private final String configKey;
   private final Declarator declarator;
 
   private Logger logger;
@@ -20,14 +19,12 @@ public class RabbitMQProducer implements Serializable {
   private Connection connection;
   private Channel channel;
 
-  public RabbitMQProducer(String configKey)
+  public RabbitMQProducer()
   {
-    this(configKey, new Declarator.NoOp());
+    this(new Declarator.NoOp());
   }
 
-  public RabbitMQProducer(String configKey,
-                          Declarator declarator) {
-    this.configKey = configKey;
+  public RabbitMQProducer(Declarator declarator) {
     this.declarator = declarator;
   }
 
@@ -61,7 +58,7 @@ public class RabbitMQProducer implements Serializable {
 
   public void open(final Map config) {
     logger = LoggerFactory.getLogger(RabbitMQProducer.class);
-    producerConfig = ProducerConfig.getFromStormConfig(configKey, config);
+    producerConfig = ProducerConfig.getFromStormConfig(config);
     internalOpen();
   }
 

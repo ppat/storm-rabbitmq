@@ -42,20 +42,20 @@ public class ConsumerConfig implements Serializable {
     return requeueOnFail;
   }
 
-  public static ConsumerConfig getFromStormConfig(String keyPrefix, Map<String, Object> stormConfig) {
-    ConnectionConfig connectionConfig = ConnectionConfig.getFromStormConfig(keyPrefix, stormConfig);
+  public static ConsumerConfig getFromStormConfig(Map<String, Object> stormConfig) {
+    ConnectionConfig connectionConfig = ConnectionConfig.getFromStormConfig(stormConfig);
     return new ConsumerConfig(connectionConfig,
-                              getFromMapAsInt(keyPrefix, "prefetchCount", stormConfig),
-                              getFromMap(keyPrefix, "queueName", stormConfig),
-                              getFromMapAsBoolean(keyPrefix, "requeueOnFail", stormConfig));
+                              getFromMapAsInt("rabbitmq.prefetchCount", stormConfig),
+                              getFromMap("rabbitmq.queueName", stormConfig),
+                              getFromMapAsBoolean("rabbitmq.requeueOnFail", stormConfig));
   }
 
-  public Map<String, Object> asMap(String keyPrefix) {
+  public Map<String, Object> asMap() {
     Map<String, Object> map = new HashMap<String, Object>();
-    map.putAll(connectionConfig.asMap(keyPrefix));
-    addToMap(keyPrefix, "prefetchCount", map, prefetchCount);
-    addToMap(keyPrefix, "queueName", map, queueName);
-    addToMap(keyPrefix, "requeueOnFail", map, requeueOnFail);
+    map.putAll(connectionConfig.asMap());
+    addToMap("rabbitmq.prefetchCount", map, prefetchCount);
+    addToMap("rabbitmq.queueName", map, queueName);
+    addToMap("rabbitmq.requeueOnFail", map, requeueOnFail);
     return map;
   }
 }

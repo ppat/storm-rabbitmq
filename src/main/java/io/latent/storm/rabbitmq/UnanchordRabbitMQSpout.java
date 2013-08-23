@@ -1,5 +1,6 @@
 package io.latent.storm.rabbitmq;
 
+import backtype.storm.spout.Scheme;
 import backtype.storm.spout.SpoutOutputCollector;
 import io.latent.storm.rabbitmq.config.ConsumerConfig;
 
@@ -13,14 +14,22 @@ import java.util.List;
  * @author peter@latent.io
  */
 public class UnanchordRabbitMQSpout extends RabbitMQSpout {
-
-  public UnanchordRabbitMQSpout(String configKey, MessageScheme scheme)
-  {
-    super(configKey, scheme);
+  public UnanchordRabbitMQSpout(Scheme scheme) {
+    super(scheme);
   }
 
-  public UnanchordRabbitMQSpout(String configKey, MessageScheme scheme, Declarator declarator) {
-    super(configKey, scheme, declarator);
+  public UnanchordRabbitMQSpout(MessageScheme scheme)
+  {
+    super(scheme);
+  }
+
+  public UnanchordRabbitMQSpout(Scheme scheme,
+                                Declarator declarator) {
+    super(scheme, declarator);
+  }
+
+  public UnanchordRabbitMQSpout(MessageScheme scheme, Declarator declarator) {
+    super(scheme, declarator);
   }
 
   @Override

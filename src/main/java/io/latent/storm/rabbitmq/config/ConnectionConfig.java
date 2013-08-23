@@ -75,23 +75,23 @@ public class ConnectionConfig implements Serializable {
     return factory;
   }
 
-  public static ConnectionConfig getFromStormConfig(String keyPrefix, Map<String, Object> stormConfig) {
-    return new ConnectionConfig(getFromMap(keyPrefix, "host", stormConfig),
-                                getFromMapAsInt(keyPrefix, "port", stormConfig),
-                                getFromMap(keyPrefix, "username", stormConfig),
-                                getFromMap(keyPrefix, "password", stormConfig),
-                                getFromMap(keyPrefix, "virtualhost", stormConfig),
-                                getFromMapAsInt(keyPrefix, "heartbeat", stormConfig));
+  public static ConnectionConfig getFromStormConfig(Map<String, Object> stormConfig) {
+    return new ConnectionConfig(getFromMap("rabbitmq.host", stormConfig),
+                                getFromMapAsInt("rabbitmq.port", stormConfig),
+                                getFromMap("rabbitmq.username", stormConfig),
+                                getFromMap("rabbitmq.password", stormConfig),
+                                getFromMap("rabbitmq.virtualhost", stormConfig),
+                                getFromMapAsInt("rabbitmq.heartbeat", stormConfig));
   }
 
-  public Map<String, Object> asMap(String keyPrefix) {
+  public Map<String, Object> asMap() {
     Map<String, Object> map = new HashMap<String, Object>();
-    addToMap(keyPrefix, "host", map, host);
-    addToMap(keyPrefix, "port", map, port);
-    addToMap(keyPrefix, "username", map, username);
-    addToMap(keyPrefix, "password", map, password);
-    addToMap(keyPrefix, "virtualhost", map, virtualHost);
-    addToMap(keyPrefix, "heartbeat", map, heartBeat);
+    addToMap("rabbitmq.host", map, host);
+    addToMap("rabbitmq.port", map, port);
+    addToMap("rabbitmq.username", map, username);
+    addToMap("rabbitmq.password", map, password);
+    addToMap("rabbitmq.virtualhost", map, virtualHost);
+    addToMap("rabbitmq.heartbeat", map, heartBeat);
     return map;
   }
 }
