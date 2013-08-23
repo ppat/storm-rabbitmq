@@ -98,7 +98,6 @@ This comes with an implementation of ```MultiStreamCoordinator```  called ```Red
 ```java
 MultiStreamCoordinator.RedeliveryStreamSeparator streamSeparator = new MultiStreamCoordinator.RedeliveryStreamSeparator();
 IRichSpout spout = new MultiStreamSpout(scheme, streamSeparator);
-
 ```
 
 Now you can send initial deliveries to a FastBolt that can fail any tuple that cannot be processed quickly by timing out the calculation. So that the main stream of tuples will have no bottleneck due to individual messages that may take a long time to process. The messages that take a long time to process will be redelivered on a separate stream that will go to the SlowBolt.
@@ -162,5 +161,5 @@ And then pass it to spout constructor.
 Declarator declarator = new CustomStormDeclarator("your.exchange", "your.rabbitmq.queue", "routing.key");
 IRichSpout spout = new RabbitMQSpout(scheme, declarator);
 ``` 
-The other spouts also take in the declarator as a parameter.
+The other spouts (UnanchordRabbitMQSpout, MultiStreamSpout) also take in the declarator as a parameter.
 
