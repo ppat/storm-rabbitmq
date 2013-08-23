@@ -51,10 +51,10 @@ IRichSpout spout = new UnanchordRabbitMQSpout(scheme);
 
 ## MultiStream Spout
 
-If you want to split the incoming message stream from your RabbitMQ queue in some manner suitable for your use case, you can use the ```MultiStreamSpout```. You need to provide an implementation of ```MultiStreamCoordinator``` that will separate the stream of tuples based on either the deserialized message (as a tuple) or the original serialized ```Message```.
+If you want to split the incoming message stream from your RabbitMQ queue in some manner suitable for your use case, you can use the ```MultiStreamSpout```. You need to provide an implementation of ```MultiStreamSplitter``` that will separate the stream of tuples based on either the deserialized message (as a tuple) or the original serialized ```Message```.
 
 ```java
-MultiStreamCoordinator streamSeparator = new MultiStreamCoordinator()
+MultiStreamSplitter streamSeparator = new MultiStreamSplitter()
 {
   @Override
   public List<String> streamNames()
@@ -67,6 +67,8 @@ MultiStreamCoordinator streamSeparator = new MultiStreamCoordinator()
   {
      // you can look at the deserialized messge in the form of List<Object> tuple
      // or you can look at the original RabbitMQ Message to determine which stream it should be emitted in
+     // this is just a simple example for demonstration purpose, you probably will want to inspect the right tuple
+     // or message values to and do something more intelligent to determine which stream it should be assigned to
      if (tuple.get(0).toString().equalsIgnoreCase("something"))
        return "stream-X";
      else
@@ -93,10 +95,10 @@ builder.setBolt("work-on-stream-Y", new StreamYBolt())
 
 ### RedeliveryStreamSeparator
 
-This comes with an implementation of ```MultiStreamCoordinator```  called ```RedeliveryStreamSeparator``` which can be used when you want to split the tuple stream into initial deliveries and redeliveries of messages that failed somewhere within the topology. Since RabbitMQ returns all failed messages back to the beginning of the queue, by separating redeliveries from initial deliveries, you can ensure that failing messages do not clog the stream for complete message stream.
+This comes with an implementation of ```MultiStreamSplitter```  called ```RedeliveryStreamSeparator``` which can be used when you want to split the tuple stream into initial deliveries and redeliveries of messages that failed somewhere within the topology. Since RabbitMQ returns all failed messages back to the beginning of the queue, by separating redeliveries from initial deliveries, you can ensure that failing messages do not clog the stream for complete message stream.
 
 ```java
-MultiStreamCoordinator.RedeliveryStreamSeparator streamSeparator = new MultiStreamCoordinator.RedeliveryStreamSeparator();
+MultiStreamSplitter streamSeparator = new RedeliveryStreamSeparator();
 IRichSpout spout = new MultiStreamSpout(scheme, streamSeparator);
 ```
 
@@ -108,10 +110,10 @@ TopologyBuilder builder = new TopologyBuilder();
 builder.setSpout("redelivery-split-spout", spout)
        .addConfigurations(spoutConfig.asMap())
        .setMaxSpoutPending(200);
-builder.setBolt("process-quickly-or-fail-bolt", new FastBolt(), 100) // fast bolt with higher parallelism
-       .shuffleGrouping("redelivery-split-spout", MultiStreamCoordinator.RedeliveryStreamSeparator.INITIAL_DELIVERY_STREAM);       
+builder.setBolt("process-quickly-or-fail-bolt", new FastBolt(), 100) // fast bolt with parallelism
+       .shuffleGrouping("redelivery-split-spout", RedeliveryStreamSeparator.INITIAL_DELIVERY_STREAM);       
 builder.setBolt("retry-failures-with-longer-timeout", new SlowBolt(),  20) // slow bolt with different parallelism
-       .shuffleGrouping("redelivery-split-spout", MultiStreamCoordinator.RedeliveryStreamSeparator.REDELIVERY_STREAM);       
+       .shuffleGrouping("redelivery-split-spout", RedeliveryStreamSeparator.REDELIVERY_STREAM);       
 ```
 
 ## Declarator
@@ -143,11 +145,8 @@ public class CustomStormDeclarator implements Declarator
     // you're given a RabbitMQ Channel so you're free to wire up your exchange/queue bindings as you see fit
     try {
       Map<String, Object> args = new HashMap<>();
-      // declare queue
       channel.queueDeclare(queue, true, false, false, args);
-      // declare exchange
       channel.exchangeDeclare(exchange, "topic", true);
-      // bind to queue to exchange
       channel.queueBind(queue, exchange, routingKey);
     } catch (IOException e) {
       throw new RuntimeException("Error executing rabbitmq declarations.", e);
