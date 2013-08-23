@@ -64,8 +64,7 @@ public class RabbitMQSpout extends BaseRichSpout {
 
   protected RabbitMQConsumer loadConsumer(Declarator declarator,
                                           ErrorReporter reporter,
-                                          ConsumerConfig config)
-  {
+                                          ConsumerConfig config) {
     return new RabbitMQConsumer(config.getConnectionConfig(),
                                 config.getPrefetchCount(),
                                 config.getQueueName(),

@@ -28,16 +28,15 @@ public class RabbitMQProducer implements Serializable {
     this.declarator = declarator;
   }
 
-  public void send(Message message,
-                   ErrorReporter reporter) {
-    send(message, "", reporter);
+  public void send(Message message) {
+    send(message, "");
   }
 
   public void send(Message message,
-                   String routingKey,
-                   ErrorReporter reporter) throws ReportedFailedException {
+                   String routingKey) {
     if (message == Message.NONE) return;
     reinitIfNecessary();
+    if (channel == null) throw new ReportedFailedException("No connection to RabbitMQ");
     try {
       AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                                                                 .contentType(producerConfig.getContentType())
@@ -48,11 +47,11 @@ public class RabbitMQProducer implements Serializable {
     } catch (AlreadyClosedException ace) {
       logger.error("already closed exception while attempting to send message", ace);
       reset();
-      reporter.reportError(ace);
+      throw new ReportedFailedException(ace);
     } catch (IOException ioe) {
       logger.error("io exception while attempting to send message", ioe);
       reset();
-      reporter.reportError(ioe);
+      throw new ReportedFailedException(ioe);
     }
   }
 

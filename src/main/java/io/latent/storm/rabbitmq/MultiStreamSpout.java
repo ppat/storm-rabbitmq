@@ -6,48 +6,53 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 
 import java.util.List;
 
+/**
+ * MultiStreamSpout will emit tuples on multiple streams by assigning tuples to a stream using the provided
+ * MultiStreamSplitter.
+ *
+ * @author peter@latent.io
+ */
 public class MultiStreamSpout extends RabbitMQSpout {
-  private final MultiStreamCoordinator streamCoordinator;
+  private final MultiStreamSplitter streamSplitter;
   private final Scheme scheme;
 
   public MultiStreamSpout(Scheme scheme,
-                          MultiStreamCoordinator streamCoordinator)
-  {
+                          MultiStreamSplitter streamSplitter) {
     super(scheme);
     this.scheme = scheme;
-    this.streamCoordinator = streamCoordinator;
+    this.streamSplitter = streamSplitter;
   }
 
   public MultiStreamSpout(MessageScheme scheme,
-                          MultiStreamCoordinator streamCoordinator) {
-    this((Scheme) scheme, streamCoordinator);
+                          MultiStreamSplitter streamSplitter) {
+    this((Scheme) scheme, streamSplitter);
   }
 
   public MultiStreamSpout(Scheme scheme,
-                          MultiStreamCoordinator streamCoordinator,
+                          MultiStreamSplitter streamSplitter,
                           Declarator declarator) {
     super(scheme, declarator);
     this.scheme = scheme;
-    this.streamCoordinator = streamCoordinator;
+    this.streamSplitter = streamSplitter;
   }
 
   public MultiStreamSpout(MessageScheme scheme,
                           Declarator declarator,
-                          MultiStreamCoordinator streamCoordinator) {
-    this((Scheme) scheme, streamCoordinator, declarator);
+                          MultiStreamSplitter streamSplitter) {
+    this((Scheme) scheme, streamSplitter, declarator);
   }
 
   @Override
   protected List<Integer> emit(List<Object> tuple,
                                Message message,
                                SpoutOutputCollector spoutOutputCollector) {
-    String stream = streamCoordinator.selectStream(tuple, message);
+    String stream = streamSplitter.selectStream(tuple, message);
     return spoutOutputCollector.emit(stream, tuple, getDeliveryTag(message));
   }
 
   @Override
   public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-    for (String stream : streamCoordinator.streamNames()) {
+    for (String stream : streamSplitter.streamNames()) {
       outputFieldsDeclarer.declareStream(stream, scheme.getOutputFields());
     }
   }

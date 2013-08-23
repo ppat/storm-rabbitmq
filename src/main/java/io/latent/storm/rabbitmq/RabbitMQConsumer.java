@@ -45,6 +45,7 @@ public class RabbitMQConsumer implements Serializable {
 
   public Message nextMessage() {
     reinitIfNecessary();
+    if (consumerTag == null || consumer == null) return Message.NONE;
     try {
       return Message.forDelivery(consumer.nextDelivery());
     } catch (ShutdownSignalException sse) {
@@ -119,8 +120,7 @@ public class RabbitMQConsumer implements Serializable {
     }
   }
 
-  protected boolean isAutoAcking()
-  {
+  protected boolean isAutoAcking() {
     return false;
   }
 

@@ -18,8 +18,7 @@ public class UnanchordRabbitMQSpout extends RabbitMQSpout {
     super(scheme);
   }
 
-  public UnanchordRabbitMQSpout(MessageScheme scheme)
-  {
+  public UnanchordRabbitMQSpout(MessageScheme scheme) {
     super(scheme);
   }
 
@@ -35,8 +34,7 @@ public class UnanchordRabbitMQSpout extends RabbitMQSpout {
   @Override
   protected RabbitMQConsumer loadConsumer(Declarator declarator,
                                           ErrorReporter reporter,
-                                          ConsumerConfig config)
-  {
+                                          ConsumerConfig config) {
     return new UnanchoredConsumer(config.getConnectionConfig(),
                                   config.getPrefetchCount(),
                                   config.getQueueName(),
@@ -46,14 +44,10 @@ public class UnanchordRabbitMQSpout extends RabbitMQSpout {
   }
 
   @Override
-  public void ack(Object msgId) {
-    // no op
-  }
+  public void ack(Object msgId) { /* no op */ }
 
   @Override
-  public void fail(Object msgId) {
-    // no op
-  }
+  public void fail(Object msgId) { /* no op */ }
 
   @Override
   protected List<Integer> emit(List<Object> tuple,
