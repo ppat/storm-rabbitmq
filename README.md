@@ -54,17 +54,14 @@ IRichSpout spout = new UnanchordRabbitMQSpout(scheme);
 If you want to split the incoming message stream from your RabbitMQ queue in some manner suitable for your use case, you can use the ```MultiStreamSpout```. You need to provide an implementation of ```MultiStreamSplitter``` that will separate the stream of tuples based on either the deserialized message (as a tuple) or the original serialized ```Message```.
 
 ```java
-MultiStreamSplitter streamSeparator = new MultiStreamSplitter()
-{
+MultiStreamSplitter streamSeparator = new MultiStreamSplitter() {
   @Override
-  public List<String> streamNames()
-  {
+  public List<String> streamNames() {
      return Arrays.asList("stream-X", "stream-Y");
   }
 
   @Override
-  public String selectStream(List<Object> tuple, Message message)
-  {
+  public String selectStream(List<Object> tuple, Message message) {
      // you can look at the deserialized messge in the form of List<Object> tuple
      // or you can look at the original RabbitMQ Message to determine which stream it should be emitted in
      // this is just a simple example for demonstration purpose, you probably will want to inspect the right tuple
@@ -121,27 +118,23 @@ builder.setBolt("retry-failures-with-longer-timeout", new SlowBolt(),  20) // sl
 By default, these spouts assume that the queue in question already exists in RabbitMQ. If you want the queue declaration to also happen on the spout, you need to provide an implementation of ```io.latent.storm.rabbitmq.Declarator```. Declarator (and therefore storm-rabbitmq) is unopinionated about how the queue this spout will listen on should be wired to exchange(s) and you are free to choose any form of wiring that serves your use case.
 
 ```java
-public class CustomStormDeclarator implements Declarator
-{
+public class CustomStormDeclarator implements Declarator {
   private final String exchange;
   private final String queue;
   private final String routingKey;
 
-  public CustomStormDeclarator(String exchange, String queue)
-  {
+  public CustomStormDeclarator(String exchange, String queue) {
     this(exchange, queue, "");
   }
 
-  public CustomStormDeclarator(String exchange, String queue, String routingKey)
-  {
+  public CustomStormDeclarator(String exchange, String queue, String routingKey) {
     this.exchange = exchange;
     this.queue = queue;
     this.routingKey = routingKey;
   }
 
   @Override
-  public void execute(Channel channel)
-  {
+  public void execute(Channel channel) {
     // you're given a RabbitMQ Channel so you're free to wire up your exchange/queue bindings as you see fit
     try {
       Map<String, Object> args = new HashMap<>();
