@@ -93,7 +93,7 @@ builder.setBolt("work-on-stream-Y", new StreamYBolt())
 
 ### RedeliveryStreamSeparator
 
-This comes with an implementation of ```MultiStreamCoordinator```  called ```RedeliveryStreamSeparator``` which can be used when you want to the tuple stream into initial deliveries and redeliveries of messages that failed somewhere within the topology. Since RabbitMQ returns all failed messages back to the beginning of the queue, by separating redeliveries from initial deliveries, you can ensure that failing messages do not clog the stream for complete message stream.
+This comes with an implementation of ```MultiStreamCoordinator```  called ```RedeliveryStreamSeparator``` which can be used when you want to split the tuple stream into initial deliveries and redeliveries of messages that failed somewhere within the topology. Since RabbitMQ returns all failed messages back to the beginning of the queue, by separating redeliveries from initial deliveries, you can ensure that failing messages do not clog the stream for complete message stream.
 
 ```java
 MultiStreamCoordinator.RedeliveryStreamSeparator streamSeparator = new MultiStreamCoordinator.RedeliveryStreamSeparator();
