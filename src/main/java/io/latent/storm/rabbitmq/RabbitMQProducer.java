@@ -1,6 +1,5 @@
 package io.latent.storm.rabbitmq;
 
-import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.ReportedFailedException;
 import com.rabbitmq.client.*;
 import io.latent.storm.rabbitmq.config.ProducerConfig;
@@ -60,8 +59,7 @@ public class RabbitMQProducer implements Serializable {
     }
   }
 
-  public void open(final Map config,
-                   final TopologyContext context) {
+  public void open(final Map config) {
     logger = LoggerFactory.getLogger(RabbitMQProducer.class);
     producerConfig = ProducerConfig.getFromStormConfig(configKey, config);
     internalOpen();
