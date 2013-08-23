@@ -110,7 +110,7 @@ builder.setSpout("redelivery-split-spout", spout)
        .setMaxSpoutPending(200);
 builder.setBolt("process-quickly-or-fail-bolt", new FastBolt(), 100) // fast bolt with higher parallelism
        .shuffleGrouping("redelivery-split-spout", MultiStreamCoordinator.RedeliveryStreamSeparator.INITIAL_DELIVERY_STREAM);       
-builder.setBolt("retry-failures-with-longer-timeout", new SlowBolt(),  10) // slow bolt with lower parallelism
+builder.setBolt("retry-failures-with-longer-timeout", new SlowBolt(),  20) // slow bolt with different parallelism
        .shuffleGrouping("redelivery-split-spout", MultiStreamCoordinator.RedeliveryStreamSeparator.REDELIVERY_STREAM);       
 ```
 
