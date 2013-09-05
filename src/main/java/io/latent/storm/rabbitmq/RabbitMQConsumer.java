@@ -14,6 +14,8 @@ import java.io.Serializable;
  * @author peter@latent.io
  */
 public class RabbitMQConsumer implements Serializable {
+  public static final long MS_WAIT_FOR_MESSAGE = 1L;
+
   private final ConnectionFactory connectionFactory;
   private final int prefetchCount;
   private final String queueName;
@@ -47,7 +49,7 @@ public class RabbitMQConsumer implements Serializable {
     reinitIfNecessary();
     if (consumerTag == null || consumer == null) return Message.NONE;
     try {
-      return Message.forDelivery(consumer.nextDelivery());
+      return Message.forDelivery(consumer.nextDelivery(MS_WAIT_FOR_MESSAGE));
     } catch (ShutdownSignalException sse) {
       reset();
       logger.error("shutdown signal received while attempting to get next message", sse);
