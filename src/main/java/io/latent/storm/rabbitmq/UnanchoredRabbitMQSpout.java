@@ -13,21 +13,21 @@ import java.util.List;
  *
  * @author peter@latent.io
  */
-public class UnanchordRabbitMQSpout extends RabbitMQSpout {
-  public UnanchordRabbitMQSpout(Scheme scheme) {
+public class UnanchoredRabbitMQSpout extends RabbitMQSpout {
+  public UnanchoredRabbitMQSpout(Scheme scheme) {
     super(scheme);
   }
 
-  public UnanchordRabbitMQSpout(MessageScheme scheme) {
+  public UnanchoredRabbitMQSpout(MessageScheme scheme) {
     super(scheme);
   }
 
-  public UnanchordRabbitMQSpout(Scheme scheme,
+  public UnanchoredRabbitMQSpout(Scheme scheme,
                                 Declarator declarator) {
     super(scheme, declarator);
   }
 
-  public UnanchordRabbitMQSpout(MessageScheme scheme, Declarator declarator) {
+  public UnanchoredRabbitMQSpout(MessageScheme scheme, Declarator declarator) {
     super(scheme, declarator);
   }
 
