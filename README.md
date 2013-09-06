@@ -42,11 +42,11 @@ builder.setSpout("my-spout", spout)
 
 ## Unanchored Spout
 
-While the standard ```RabbitMQSpout``` above will deliver messages on an anchored stream, if fault tolerance is not required, you can use the ```UnanchordRabbitMQSpout```.
+While the standard ```RabbitMQSpout``` above will deliver messages on an anchored stream, if fault tolerance is not required, you can use the ```UnanchoredRabbitMQSpout```.
 
 ```java
 Scheme scheme = new YourCustomMessageScheme();
-IRichSpout spout = new UnanchordRabbitMQSpout(scheme);
+IRichSpout spout = new UnanchoredRabbitMQSpout(scheme);
 ```
 
 ## MultiStream Spout
@@ -153,5 +153,5 @@ And then pass it to spout constructor.
 Declarator declarator = new CustomStormDeclarator("your.exchange", "your.rabbitmq.queue", "routing.key");
 IRichSpout spout = new RabbitMQSpout(scheme, declarator);
 ``` 
-The other spouts (UnanchordRabbitMQSpout, MultiStreamSpout) also take in the declarator as a parameter.
+The other spouts (UnanchoredRabbitMQSpout, MultiStreamSpout) also take in the declarator as a parameter.
 
