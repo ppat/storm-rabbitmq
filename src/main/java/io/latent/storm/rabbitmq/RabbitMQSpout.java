@@ -27,10 +27,6 @@ public class RabbitMQSpout extends BaseRichSpout {
   private RabbitMQConsumer consumer;
   private SpoutOutputCollector collector;
 
-  public RabbitMQSpout(MessageScheme scheme) {
-    this(scheme, new Declarator.NoOp());
-  }
-
   public RabbitMQSpout(Scheme scheme) {
     this(MessageScheme.Builder.from(scheme), new Declarator.NoOp());
   }

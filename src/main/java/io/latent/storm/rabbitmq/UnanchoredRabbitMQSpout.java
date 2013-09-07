@@ -18,16 +18,8 @@ public class UnanchoredRabbitMQSpout extends RabbitMQSpout {
     super(scheme);
   }
 
-  public UnanchoredRabbitMQSpout(MessageScheme scheme) {
-    super(scheme);
-  }
-
   public UnanchoredRabbitMQSpout(Scheme scheme,
-                                Declarator declarator) {
-    super(scheme, declarator);
-  }
-
-  public UnanchoredRabbitMQSpout(MessageScheme scheme, Declarator declarator) {
+                                 Declarator declarator) {
     super(scheme, declarator);
   }
 

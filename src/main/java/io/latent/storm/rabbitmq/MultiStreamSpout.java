@@ -3,6 +3,7 @@ package io.latent.storm.rabbitmq;
 import backtype.storm.spout.Scheme;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.tuple.Fields;
 
 import java.util.List;
 
@@ -14,32 +15,21 @@ import java.util.List;
  */
 public class MultiStreamSpout extends RabbitMQSpout {
   private final MultiStreamSplitter streamSplitter;
-  private final Scheme scheme;
+  private final Fields outputFields;
 
   public MultiStreamSpout(Scheme scheme,
                           MultiStreamSplitter streamSplitter) {
     super(scheme);
-    this.scheme = scheme;
+    this.outputFields = scheme.getOutputFields();
     this.streamSplitter = streamSplitter;
-  }
-
-  public MultiStreamSpout(MessageScheme scheme,
-                          MultiStreamSplitter streamSplitter) {
-    this((Scheme) scheme, streamSplitter);
   }
 
   public MultiStreamSpout(Scheme scheme,
                           MultiStreamSplitter streamSplitter,
                           Declarator declarator) {
     super(scheme, declarator);
-    this.scheme = scheme;
+    this.outputFields = scheme.getOutputFields();
     this.streamSplitter = streamSplitter;
-  }
-
-  public MultiStreamSpout(MessageScheme scheme,
-                          Declarator declarator,
-                          MultiStreamSplitter streamSplitter) {
-    this((Scheme) scheme, streamSplitter, declarator);
   }
 
   @Override
@@ -53,7 +43,7 @@ public class MultiStreamSpout extends RabbitMQSpout {
   @Override
   public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
     for (String stream : streamSplitter.streamNames()) {
-      outputFieldsDeclarer.declareStream(stream, scheme.getOutputFields());
+      outputFieldsDeclarer.declareStream(stream, outputFields);
     }
   }
 }

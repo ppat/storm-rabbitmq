@@ -15,6 +15,13 @@ public interface MessageScheme extends Scheme {
 
   public static class Builder {
     public static MessageScheme from(final Scheme scheme) {
+      if (scheme instanceof MessageScheme)
+        return (MessageScheme) scheme;
+      else
+        return create(scheme);
+    }
+
+    private static MessageScheme create(final Scheme scheme) {
       return new MessageScheme() {
         @Override
         public void open(Map config,
