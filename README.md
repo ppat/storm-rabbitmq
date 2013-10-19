@@ -1,5 +1,8 @@
 # storm-rabbitmq
 
+[![Build Status](https://travis-ci.org/ppat/storm-rabbitmq.png)](https://travis-ci.org/ppat/storm-rabbitmq)
+
+
 Storm RabbitMQ is a library of tools to be employed while integrating with [RabbitMQ](https://github.com/rabbitmq/rabbitmq-server/) from [Storm](https://github.com/nathanmarz/storm/). This library is intended to be used with RabbitMQ specifically and may not work with other AMQP brokers as this library will be using RabbitMQ specific extensions to AMQP.
 
 LICENSE: MIT License
