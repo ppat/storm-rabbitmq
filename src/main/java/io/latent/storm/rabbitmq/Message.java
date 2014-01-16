@@ -27,16 +27,24 @@ public class Message {
   public static class DeliveredMessage extends Message {
     private final boolean redelivery;
     private final long deliveryTag;
+    private final String receivedRoutingKey;
+    private final String receivedExchange;
 
     private DeliveredMessage(QueueingConsumer.Delivery delivery) {
       super(delivery.getBody());
       redelivery = delivery.getEnvelope().isRedeliver();
       deliveryTag = delivery.getEnvelope().getDeliveryTag();
+      receivedRoutingKey = delivery.getEnvelope().getRoutingKey();
+      receivedExchange = delivery.getEnvelope().getExchange();
     }
 
     public boolean isRedelivery() { return redelivery; }
 
     public long getDeliveryTag() { return deliveryTag; }
+
+    public String getReceivedRoutingKey() { return receivedRoutingKey; }
+
+    public String getReceivedExchange() { return receivedExchange; }
   }
 
   public static class None extends Message {
