@@ -13,6 +13,8 @@ public interface MessageScheme extends Scheme {
 
   void close();
 
+  List<Object> deserialize(Message message);
+
   public static class Builder {
     public static MessageScheme from(final Scheme scheme) {
       if (scheme instanceof MessageScheme)
@@ -29,6 +31,11 @@ public interface MessageScheme extends Scheme {
 
         @Override
         public void close() { }
+
+        @Override
+        public List<Object> deserialize(Message message) {
+          return scheme.deserialize(message.getBody());
+        }
 
         @Override
         public List<Object> deserialize(byte[] bytes) {
