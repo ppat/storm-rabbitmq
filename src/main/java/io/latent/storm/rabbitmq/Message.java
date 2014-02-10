@@ -1,6 +1,8 @@
 package io.latent.storm.rabbitmq;
 
 import com.rabbitmq.client.QueueingConsumer;
+import java.util.Date;
+import java.util.Map;
 
 public class Message {
   public static final Message NONE = new None();
@@ -23,28 +25,66 @@ public class Message {
     return body;
   }
 
-
   public static class DeliveredMessage extends Message {
     private final boolean redelivery;
     private final long deliveryTag;
-    private final String receivedRoutingKey;
-    private final String receivedExchange;
+    private final String routingKey;
+    private final String exchange;
+    private final String className;
+    private final String clusterId;
+    private final String contentEncoding;
+    private final String contentType;
+    private final String correlationId;
+    private final Integer deliveryMode;
+    private final String expiration;
+    private final Map<String, Object> headers;
+    private final String messageId;
+    private final Integer priority;
+    private final String replyTo;
+    private final Date timestamp;
+    private final String type;
+    private final String userId;
 
     private DeliveredMessage(QueueingConsumer.Delivery delivery) {
       super(delivery.getBody());
       redelivery = delivery.getEnvelope().isRedeliver();
       deliveryTag = delivery.getEnvelope().getDeliveryTag();
-      receivedRoutingKey = delivery.getEnvelope().getRoutingKey();
-      receivedExchange = delivery.getEnvelope().getExchange();
+      routingKey = delivery.getEnvelope().getRoutingKey();
+      exchange = delivery.getEnvelope().getExchange();
+      className = delivery.getProperties().getClassName();
+      clusterId = delivery.getProperties().getClusterId();
+      contentEncoding = delivery.getProperties().getContentEncoding();
+      contentType = delivery.getProperties().getContentType();
+      correlationId = delivery.getProperties().getCorrelationId();
+      deliveryMode = delivery.getProperties().getDeliveryMode();
+      expiration = delivery.getProperties().getExpiration();
+      headers = delivery.getProperties().getHeaders();
+      messageId = delivery.getProperties().getMessageId();
+      priority = delivery.getProperties().getPriority();
+      replyTo = delivery.getProperties().getReplyTo();
+      timestamp = delivery.getProperties().getTimestamp();
+      type = delivery.getProperties().getType();
+      userId = delivery.getProperties().getUserId();
     }
 
     public boolean isRedelivery() { return redelivery; }
-
     public long getDeliveryTag() { return deliveryTag; }
-
-    public String getReceivedRoutingKey() { return receivedRoutingKey; }
-
-    public String getReceivedExchange() { return receivedExchange; }
+    public String getRoutingKey() { return routingKey; }
+    public String getExchange() { return exchange; }
+    public String getClassName() { return className;}
+    public String getClusterId(){ return clusterId; }
+    public String getContentEncoding() { return contentEncoding; }
+    public String getContentType() { return contentType; }
+    public String getCorrelationId() { return correlationId; }
+    public Integer getDeliveryMode() { return deliveryMode; }
+    public String getExpiration() { return expiration; }
+    public Map<String, Object> getHeaders() { return headers; }
+    public String getMessageId() { return messageId; }
+    public Integer getPriority() { return priority; }
+    public String getReplyTo() { return replyTo; }
+    public Date getTimestamp() { return timestamp; }
+    public String getType() { return type; }
+    public String getUserId() { return userId; }
   }
 
   public static class None extends Message {
