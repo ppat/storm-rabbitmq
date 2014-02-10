@@ -15,7 +15,7 @@ public class RabbitMQMessageScheme implements MessageScheme {
 
 
   public RabbitMQMessageScheme(Scheme payloadScheme, String envelopeFieldName, String propertiesFieldName) {
-  	this.payloadScheme = payloadScheme;
+    this.payloadScheme = payloadScheme;
 
     List<String> payloadFieldNames = payloadScheme.getOutputFields().toList();
 
@@ -35,7 +35,7 @@ public class RabbitMQMessageScheme implements MessageScheme {
 
   @Override 
   public List<Object> deserialize(Message message) {
-  	Message.DeliveredMessage dm = (Message.DeliveredMessage)message;
+    Message.DeliveredMessage dm = (Message.DeliveredMessage)message;
     Envelope envelope = createEnvelope(dm);
     Properties properties = createProperties(dm);
     List<Object> payloadValues = deserialize(dm.getBody());
@@ -50,7 +50,7 @@ public class RabbitMQMessageScheme implements MessageScheme {
 
   @Override
   public List<Object> deserialize(byte[] payload) {
-  	return payloadScheme.deserialize(payload);
+    return payloadScheme.deserialize(payload);
   }
 
   @Override
