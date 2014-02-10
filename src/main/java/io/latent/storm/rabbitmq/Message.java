@@ -1,6 +1,7 @@
 package io.latent.storm.rabbitmq;
 
 import com.rabbitmq.client.QueueingConsumer;
+import java.util.Date;
 
 public class Message {
   public static final Message NONE = new None();
@@ -29,6 +30,7 @@ public class Message {
     private final long deliveryTag;
     private final String receivedRoutingKey;
     private final String receivedExchange;
+    private final Date timestamp;
 
     private DeliveredMessage(QueueingConsumer.Delivery delivery) {
       super(delivery.getBody());
@@ -36,6 +38,7 @@ public class Message {
       deliveryTag = delivery.getEnvelope().getDeliveryTag();
       receivedRoutingKey = delivery.getEnvelope().getRoutingKey();
       receivedExchange = delivery.getEnvelope().getExchange();
+      timestamp = delivery.getProperties().getTimestamp();
     }
 
     public boolean isRedelivery() { return redelivery; }
@@ -45,6 +48,8 @@ public class Message {
     public String getReceivedRoutingKey() { return receivedRoutingKey; }
 
     public String getReceivedExchange() { return receivedExchange; }
+
+    public Date getTimestamp() { return timestamp; }
   }
 
   public static class None extends Message {
