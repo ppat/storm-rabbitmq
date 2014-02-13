@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import backtype.storm.task.TopologyContext;
+import java.io.Serializable;
 
 
 public class RabbitMQMessageScheme implements MessageScheme {
@@ -79,7 +80,7 @@ public class RabbitMQMessageScheme implements MessageScheme {
             dm.getUserId());
   }
 
-  public static class Envelope {
+  public static class Envelope implements Serializable {
     private final boolean isRedelivery;
     private final long deliveryTag;
     private final String exchange;
@@ -98,7 +99,7 @@ public class RabbitMQMessageScheme implements MessageScheme {
     public String getRoutingKey() { return routingKey; }
   }
 
-  public static class Properties {
+  public static class Properties implements Serializable {
     private final String className;
     private final String clusterId;
     private final String contentEncoding;
