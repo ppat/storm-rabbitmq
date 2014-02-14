@@ -158,3 +158,34 @@ IRichSpout spout = new RabbitMQSpout(scheme, declarator);
 ``` 
 The other spouts (UnanchoredRabbitMQSpout, MultiStreamSpout) also take in the declarator as a parameter.
 
+## RabbitMQMessageScheme
+
+The standard backtype message scheme only allows access to the payload of a message received via RabbitMQ. Normally, the payload is all you will need. There are scenarios where this isn't true; you need access to the routing key as part of your topology logic, you only want to handle "new" messages and need access to the message timestamp, whatever your use case, the payload isn't enough. The provided RabbitMQMessageScheme allows you to gain access to RabbitMQ message information without having to change every bolt that interacts with a RabbitMQSpout. 
+
+When constructing a RabbitMQMessageScheme you need to provide 3 pieces of information:
+
+* an implementation of ```backtype.storm.spout.Scheme``` to deserialize a RabbitMQ message payload.
+* the tuple field name to use for RabbitMQ message envelope info
+* the tuple field name to use for the RabbitMQ properties info
+
+The first should be fairly explanatory. You supply your existing payload handling scheme. All existing bolts will continue to function as is. No field names need to be changed nor would any field indexes. The supplied envelope and properties names will be used to allow you to access them in your bolt. Additionally, if you access tuple fields by index, the envelope and properties will be added as 2 additional fields at the end of the tuple. 
+
+If you were to create a RabbitMQMessageScheme as below:
+
+```java
+Scheme scheme = new RabbitMQMessageScheme(new SimpleJSONScheme(), "myMessageEnvelope", "myMessageProperties");
+```
+
+then in any bolt attached to the spout stream you could access them as:
+
+```java
+RabbitMQMessageScheme.Envelope envelope = tuple.getValueByField("myMessageEnvelope");
+
+RabbitMQMessageScheme.Properties properties = tuple.getValueByField("myMessageProperties");
+```
+
+All standard RabbitMQ envelope and message properties are available. See RabbitMQMessageScheme.java for the full interface.
+
+
+
+
