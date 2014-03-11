@@ -100,7 +100,9 @@ public class RabbitMQSpout extends BaseRichSpout {
       if (tuple != null && !tuple.isEmpty()) {
         return tuple;
       }
-      logger.warn("Deserialization error for msgId " + deliveryTag);
+      String errorMsg = "Deserialization error for msgId " + deliveryTag;
+      logger.warn(errorMsg);
+      collector.reportError(new Exception(errorMsg));
     } catch (Exception e) {
       logger.warn("Deserialization error for msgId " + deliveryTag, e);
       collector.reportError(e);
