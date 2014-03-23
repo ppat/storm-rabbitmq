@@ -82,7 +82,11 @@ public class RabbitMQMessageScheme implements MessageScheme {
   private Map<String, Object> serialiazableHeaders(Map<String, Object> headers) {
     Map<String, Object> serializableHeaders = new HashMap<String, Object>(headers.size());
     for (Map.Entry<String, Object> entry : headers.entrySet()) {
-      if (entry.getValue() instanceof Serializable) {
+      if (entry.getValue() instanceof Number ||
+          entry.getValue() instanceof Boolean ||
+          entry.getValue() instanceof Character ||
+          entry.getValue() instanceof String ||
+          entry.getValue() instanceof Date) {
         serializableHeaders.put(entry.getKey(), entry.getValue());
       }
     }
