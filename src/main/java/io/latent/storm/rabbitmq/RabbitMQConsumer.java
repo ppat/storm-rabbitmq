@@ -71,6 +71,10 @@ public class RabbitMQConsumer implements Serializable {
   public void ack(Long msgId) {
     try {
       channel.basicAck(msgId, false);
+    } catch (ShutdownSignalException sse) {
+      reset();
+      logger.error("shutdown signal received while attempting to ack message", sse);
+      reporter.reportError(sse);
     } catch (Exception e) {
       logger.error("could not ack for msgId: " + msgId, e);
       reporter.reportError(e);
@@ -87,6 +91,10 @@ public class RabbitMQConsumer implements Serializable {
   public void failWithRedelivery(Long msgId) {
     try {
       channel.basicReject(msgId, true);
+    } catch (ShutdownSignalException sse) {
+      reset();
+      logger.error("shutdown signal received while attempting to fail with redelivery", sse);
+      reporter.reportError(sse);
     } catch (Exception e) {
       logger.error("could not fail with redelivery for msgId: " + msgId, e);
       reporter.reportError(e);
@@ -96,6 +104,10 @@ public class RabbitMQConsumer implements Serializable {
   public void deadLetter(Long msgId) {
     try {
       channel.basicReject(msgId, false);
+    } catch (ShutdownSignalException sse) {
+      reset();
+      logger.error("shutdown signal received while attempting to fail with no redelivery", sse);
+      reporter.reportError(sse);
     } catch (Exception e) {
       logger.error("could not fail with dead-lettering (when configured) for msgId: " + msgId, e);
       reporter.reportError(e);
