@@ -2,10 +2,9 @@ package io.latent.storm.rabbitmq;
 
 import backtype.storm.spout.Scheme;
 import backtype.storm.tuple.Fields;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
+
 import backtype.storm.task.TopologyContext;
 import java.io.Serializable;
 
@@ -71,13 +70,23 @@ public class RabbitMQMessageScheme implements MessageScheme {
             dm.getCorrelationId(),
             dm.getDeliveryMode(),
             dm.getExpiration(),
-            dm.getHeaders(),
+            serialiazableHeaders(dm.getHeaders()),
             dm.getMessageId(),
             dm.getPriority(),
             dm.getReplyTo(),
             dm.getTimestamp(),
             dm.getType(),
             dm.getUserId());
+  }
+
+  private Map<String, Object> serialiazableHeaders(Map<String, Object> headers) {
+    Map<String, Object> serializableHeaders = new HashMap<String, Object>(headers.size());
+    for (Map.Entry<String, Object> entry : headers.entrySet()) {
+      if (entry.getValue() instanceof Serializable) {
+        serializableHeaders.put(entry.getKey(), entry.getValue());
+      }
+    }
+    return serializableHeaders;
   }
 
   public static class Envelope implements Serializable {
