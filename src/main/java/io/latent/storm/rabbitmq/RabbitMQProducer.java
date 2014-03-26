@@ -13,11 +13,11 @@ import java.util.Map;
 public class RabbitMQProducer implements Serializable {
   private final Declarator declarator;
 
-  private Logger logger;
+  private transient Logger logger;
 
-  private ProducerConfig producerConfig;
-  private Connection connection;
-  private Channel channel;
+  private transient ProducerConfig producerConfig;
+  private transient Connection connection;
+  private transient Channel channel;
 
   public RabbitMQProducer()
   {
