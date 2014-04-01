@@ -80,6 +80,9 @@ public class RabbitMQMessageScheme implements MessageScheme {
   }
 
   private Map<String, Object> serialiazableHeaders(Map<String, Object> headers) {
+    if (headers == null) {
+      return new HashMap<String, Object>();
+    }
     Map<String, Object> serializableHeaders = new HashMap<String, Object>(headers.size());
     for (Map.Entry<String, Object> entry : headers.entrySet()) {
       if (entry.getValue() instanceof Number ||
