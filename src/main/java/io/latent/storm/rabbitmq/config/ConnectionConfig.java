@@ -106,9 +106,8 @@ public class ConnectionConfig implements Serializable {
     }
 
     public static ConnectionConfig getFromStormConfig(Map<String, Object> stormConfig) {
-        String uri = getFromMap("rabbitmq.uri", stormConfig);
-        if (uri != null) {
-            return new ConnectionConfig(uri);
+        if (stormConfig.containsKey("rabbitmq.uri")) {
+            return new ConnectionConfig(getFromMap("rabbitmq.uri", stormConfig));
         } else {
             return new ConnectionConfig(getFromMap("rabbitmq.host", stormConfig),
                     getFromMapAsInt("rabbitmq.port", stormConfig),
