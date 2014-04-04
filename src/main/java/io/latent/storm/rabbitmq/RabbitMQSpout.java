@@ -78,8 +78,8 @@ public class RabbitMQSpout extends BaseRichSpout {
 
   @Override
   public void nextTuple() {
-    Message message = consumer.nextMessage();
-    if (message != Message.NONE) {
+    Message message;
+    while ((message = consumer.nextMessage()) != Message.NONE) {
       List<Object> tuple = extractTuple(message);
       if (!tuple.isEmpty()) {
         emit(tuple, message, collector);
