@@ -7,6 +7,37 @@
     <version>0.5.10-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>storm-rabbitmq</name>
+    <description>A library of tools for interacting with RabbitMQ from Storm.</description>
+    <url>https://github.com/ppat/storm-rabbitmq</url>
+    <inceptionYear>2013</inceptionYear>
+    <licenses>
+      <license>
+        <name>The MIT License</name>
+        <url>http://www.opensource.org/licenses/mit-license.php</url>
+        <distribution>repo</distribution>
+      </license>
+    </licenses>
+    <developers>
+      <developer>
+        <id>ppat</id>
+        <name>Peter Pathirana</name>
+        <email>peter@latent.io</email>
+      </developer>
+      <developer>
+        <id>SeanTAllen</id>
+        <name>Sean T Allen</name>
+        <email>sean@monkeysnatchbanana.com</email>
+      </developer>
+      <developer>
+        <id>philipsdoctor</id>
+        <name>Philip S Doctor</name>
+      </developer>
+      <developer>
+        <id>drazzib</id>
+        <name>Damien Raude-Morvan</name>
+        <email>drazzib@drazzib.com</email>
+      </developer>
+    </developers>
 
     <!-- Include OSS Nexus configuration which will add :
          1/ Distribution management with Nexus OSS
@@ -22,8 +53,8 @@
         <connection>scm:git:git@github.com:ppat/storm-rabbitmq.git</connection>
         <developerConnection>scm:git:git@github.com:ppat/storm-rabbitmq.git</developerConnection>
         <url>git@github.com:ppat/storm-rabbitmq.git</url>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <repositories>
         <repository>
