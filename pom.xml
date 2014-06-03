@@ -4,7 +4,7 @@
 
     <groupId>io.latent</groupId>
     <artifactId>storm-rabbitmq</artifactId>
-    <version>0.5.11</version>
+    <version>0.5.12-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>storm-rabbitmq</name>
     <description>A library of tools for interacting with RabbitMQ from Storm.</description>
