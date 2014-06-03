@@ -69,6 +69,7 @@ public class RabbitMQConsumer implements Serializable {
   }
 
   public void ack(Long msgId) {
+    reinitIfNecessary();
     try {
       channel.basicAck(msgId, false);
     } catch (ShutdownSignalException sse) {
@@ -89,6 +90,7 @@ public class RabbitMQConsumer implements Serializable {
   }
 
   public void failWithRedelivery(Long msgId) {
+    reinitIfNecessary();
     try {
       channel.basicReject(msgId, true);
     } catch (ShutdownSignalException sse) {
@@ -102,6 +104,7 @@ public class RabbitMQConsumer implements Serializable {
   }
 
   public void deadLetter(Long msgId) {
+    reinitIfNecessary();
     try {
       channel.basicReject(msgId, false);
     } catch (ShutdownSignalException sse) {
