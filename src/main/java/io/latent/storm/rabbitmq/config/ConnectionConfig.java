@@ -109,12 +109,12 @@ public class ConnectionConfig implements Serializable {
         if (stormConfig.containsKey("rabbitmq.uri")) {
             return new ConnectionConfig(getFromMap("rabbitmq.uri", stormConfig));
         } else {
-            return new ConnectionConfig(getFromMap("rabbitmq.host", stormConfig),
-                    getFromMapAsInt("rabbitmq.port", stormConfig),
-                    getFromMap("rabbitmq.username", stormConfig),
-                    getFromMap("rabbitmq.password", stormConfig),
-                    getFromMap("rabbitmq.virtualhost", stormConfig),
-                    getFromMapAsInt("rabbitmq.heartbeat", stormConfig));
+            return new ConnectionConfig(getFromMap("rabbitmq.host", stormConfig, ConnectionFactory.DEFAULT_HOST),
+                    getFromMapAsInt("rabbitmq.port", stormConfig, ConnectionFactory.DEFAULT_AMQP_PORT),
+                    getFromMap("rabbitmq.username", stormConfig, ConnectionFactory.DEFAULT_USER),
+                    getFromMap("rabbitmq.password", stormConfig, ConnectionFactory.DEFAULT_PASS),
+                    getFromMap("rabbitmq.virtualhost", stormConfig, ConnectionFactory.DEFAULT_VHOST),
+                    getFromMapAsInt("rabbitmq.heartbeat", stormConfig, ConnectionFactory.DEFAULT_HEARTBEAT));
         }
     }
 
