@@ -1,17 +1,19 @@
 package io.latent.storm.rabbitmq;
 
+import io.latent.storm.rabbitmq.config.ConsumerConfig;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import backtype.storm.spout.Scheme;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
-import io.latent.storm.rabbitmq.config.ConsumerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 /**
  * A simple RabbitMQ spout that emits an anchored tuple stream (on the default stream). This can be used with
@@ -26,7 +28,12 @@ public class RabbitMQSpout extends BaseRichSpout {
   private transient Logger logger;
   private transient RabbitMQConsumer consumer;
   private transient SpoutOutputCollector collector;
-
+  private transient Map topoConfig;
+  private transient TopologyContext topoContext;
+  private transient ConsumerConfig consConfig;
+  private transient ErrorReporter reporter;
+  
+  
   public RabbitMQSpout(Scheme scheme) {
     this(MessageScheme.Builder.from(scheme), new Declarator.NoOp());
   }
@@ -44,16 +51,15 @@ public class RabbitMQSpout extends BaseRichSpout {
   public void open(final Map config,
                    final TopologyContext context,
                    final SpoutOutputCollector spoutOutputCollector) {
-    ConsumerConfig consumerConfig = ConsumerConfig.getFromStormConfig(config);
-    ErrorReporter reporter = new ErrorReporter() {
+    consConfig = ConsumerConfig.getFromStormConfig(config);
+    reporter = new ErrorReporter() {
       @Override
       public void reportError(Throwable error) {
         spoutOutputCollector.reportError(error);
       }
     };
-    consumer = loadConsumer(declarator, reporter, consumerConfig);
-    scheme.open(config, context);
-    consumer.open();
+    topoConfig = config;
+    topoContext = context;
     logger = LoggerFactory.getLogger(RabbitMQSpout.class);
     collector = spoutOutputCollector;
   }
@@ -67,6 +73,24 @@ public class RabbitMQSpout extends BaseRichSpout {
                                 config.isRequeueOnFail(),
                                 declarator,
                                 reporter);
+  }
+  
+  @Override
+  public void activate() {
+    logger.info("activating spout!");
+    consumer = loadConsumer(declarator, reporter, consConfig);
+    scheme.open(topoConfig, topoContext);
+    consumer.open();
+    super.activate();
+  }
+  
+  @Override
+  public void deactivate() {
+    logger.info("deactivating spout!");
+    consumer.close();
+    scheme.close();
+    consumer = null;
+    super.deactivate();
   }
 
   @Override
