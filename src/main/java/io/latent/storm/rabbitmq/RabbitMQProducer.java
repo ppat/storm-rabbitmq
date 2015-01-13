@@ -19,6 +19,8 @@ public class RabbitMQProducer implements Serializable {
   private transient Connection connection;
   private transient Channel channel;
 
+  private boolean blocked = false;
+
   public RabbitMQProducer()
   {
     this(new Declarator.NoOp());
@@ -33,7 +35,23 @@ public class RabbitMQProducer implements Serializable {
   }
 
   public void send(Message message,
-                   String routingKey) {
+                   String routingKey) { sendMessageWhenNotBlocked(message, routingKey); }
+
+  public void sendMessageWhenNotBlocked(Message message,
+                                        String routingKey)
+  {
+    while (true) {
+      if (blocked) {
+        try { Thread.sleep(100); } catch (InterruptedException ie) { }
+      } else {
+        sendMessageActual(message, routingKey);
+        return;
+      }
+    }
+  }
+
+  private void sendMessageActual(Message message,
+                                 String routingKey) {
     if (message == Message.NONE) return;
     reinitIfNecessary();
     if (channel == null) throw new ReportedFailedException("No connection to RabbitMQ");
@@ -52,6 +70,9 @@ public class RabbitMQProducer implements Serializable {
       logger.error("io exception while attempting to send message", ioe);
       reset();
       throw new ReportedFailedException(ioe);
+    } catch (Exception e) {
+      logger.warn("Unexpected error while sending message. Backing off for a bit before trying again (to allow time for recovery)", e);
+      try { Thread.sleep(1000); } catch (InterruptedException ie) { }
     }
   }
 
@@ -110,6 +131,22 @@ public class RabbitMQProducer implements Serializable {
       public void shutdownCompleted(ShutdownSignalException cause) {
         logger.error("shutdown signal received", cause);
         reset();
+      }
+    });
+    connection.addBlockedListener(new BlockedListener()
+    {
+      @Override
+      public void handleBlocked(String reason) throws IOException
+      {
+        blocked = true;
+        logger.warn(String.format("Got blocked by rabbitmq with reason = %s", reason));
+      }
+
+      @Override
+      public void handleUnblocked() throws IOException
+      {
+        blocked = false;
+        logger.warn(String.format("Got unblocked by rabbitmq"));
       }
     });
     logger.info("connected to rabbitmq: " + connection + " for " + producerConfig.getExchangeName());
