@@ -27,6 +27,8 @@ public class RabbitMQSpout extends BaseRichSpout {
   private transient RabbitMQConsumer consumer;
   private transient SpoutOutputCollector collector;
 
+  private boolean active;
+
   public RabbitMQSpout(Scheme scheme) {
     this(MessageScheme.Builder.from(scheme), new Declarator.NoOp());
   }
@@ -56,6 +58,7 @@ public class RabbitMQSpout extends BaseRichSpout {
     consumer.open();
     logger = LoggerFactory.getLogger(RabbitMQSpout.class);
     collector = spoutOutputCollector;
+    active = true;
   }
 
   protected RabbitMQConsumer loadConsumer(Declarator declarator,
@@ -78,6 +81,7 @@ public class RabbitMQSpout extends BaseRichSpout {
 
   @Override
   public void nextTuple() {
+    if (!active) return;
     Message message;
     while ((message = consumer.nextMessage()) != Message.NONE) {
       List<Object> tuple = extractTuple(message);
@@ -125,6 +129,20 @@ public class RabbitMQSpout extends BaseRichSpout {
   @Override
   public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
     outputFieldsDeclarer.declare(scheme.getOutputFields());
+  }
+
+  @Override
+  public void deactivate()
+  {
+    super.deactivate();
+    active = false;
+  }
+
+  @Override
+  public void activate()
+  {
+    super.activate();
+    active = true;
   }
 
   protected long getDeliveryTag(Message message) {
