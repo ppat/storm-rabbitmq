@@ -67,6 +67,7 @@ public class RabbitMQBolt extends BaseRichBolt {
   @Override
   public void execute(final Tuple input) {
     producer.send(scheme.produceMessage(input), routingKey);
+    scheme.emitTuples(collector, input);
     collector.ack(input);
   }
 
