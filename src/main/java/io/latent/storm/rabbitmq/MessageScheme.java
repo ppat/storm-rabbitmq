@@ -1,15 +1,14 @@
 package io.latent.storm.rabbitmq;
 
+import java.util.List;
+import java.util.Map;
+
 import backtype.storm.spout.Scheme;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.tuple.Fields;
 
-import java.util.List;
-import java.util.Map;
-
 public interface MessageScheme extends Scheme {
-  void open(Map config,
-            TopologyContext context);
+  void open(@SuppressWarnings("rawtypes") Map config, TopologyContext context);
 
   void close();
 
@@ -25,12 +24,18 @@ public interface MessageScheme extends Scheme {
 
     private static MessageScheme create(final Scheme scheme) {
       return new MessageScheme() {
-        @Override
-        public void open(Map config,
-                         TopologyContext context) { }
+        /**
+         * Serial version UID.
+         */
+        private static final long serialVersionUID = 1L;
 
         @Override
-        public void close() { }
+        public void open(@SuppressWarnings("rawtypes") Map config, TopologyContext context) {
+        }
+
+        @Override
+        public void close() {
+        }
 
         @Override
         public List<Object> deserialize(Message message) {

@@ -1,14 +1,20 @@
 package io.latent.storm.rabbitmq;
 
-import com.rabbitmq.client.Channel;
-
 import java.io.Serializable;
 
-public interface Declarator extends Serializable {
-  void execute(Channel channel);
+import com.rabbitmq.client.Channel;
 
-  public static class NoOp implements Declarator {
-    @Override
-    public void execute(Channel channel) {}
-  }
+public interface Declarator extends Serializable {
+    void execute(Channel channel);
+
+    public static class NoOp implements Declarator {
+        /**
+         * Serial version UID.
+         */
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void execute(Channel channel) {
+        }
+    }
 }

@@ -1,25 +1,32 @@
 package io.latent.storm.rabbitmq;
 
-import backtype.storm.spout.Scheme;
-import backtype.storm.spout.SpoutOutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseRichSpout;
 import io.latent.storm.rabbitmq.config.ConsumerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import backtype.storm.spout.Scheme;
+import backtype.storm.spout.SpoutOutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseRichSpout;
+
 /**
- * A simple RabbitMQ spout that emits an anchored tuple stream (on the default stream). This can be used with
- * Storm's guaranteed message processing.
+ * A simple RabbitMQ spout that emits an anchored tuple stream (on the default
+ * stream). This can be used with Storm's guaranteed message processing.
  * 
  * @author peter@latent.io
  */
 public class RabbitMQSpout extends BaseRichSpout {
+  /**
+   * Serial version UID.
+   */
+  private static final long serialVersionUID = 1L;
+
   private final MessageScheme scheme;
   private final Declarator declarator;
 
@@ -43,9 +50,8 @@ public class RabbitMQSpout extends BaseRichSpout {
   }
 
   @Override
-  public void open(final Map config,
-                   final TopologyContext context,
-                   final SpoutOutputCollector spoutOutputCollector) {
+  public void open(@SuppressWarnings("rawtypes") final Map config, final TopologyContext context, final SpoutOutputCollector spoutOutputCollector) {
+    @SuppressWarnings("unchecked")
     ConsumerConfig consumerConfig = ConsumerConfig.getFromStormConfig(config);
     ErrorReporter reporter = new ErrorReporter() {
       @Override
@@ -61,15 +67,8 @@ public class RabbitMQSpout extends BaseRichSpout {
     active = true;
   }
 
-  protected RabbitMQConsumer loadConsumer(Declarator declarator,
-                                          ErrorReporter reporter,
-                                          ConsumerConfig config) {
-    return new RabbitMQConsumer(config.getConnectionConfig(),
-                                config.getPrefetchCount(),
-                                config.getQueueName(),
-                                config.isRequeueOnFail(),
-                                declarator,
-                                reporter);
+  protected RabbitMQConsumer loadConsumer(Declarator declarator, ErrorReporter reporter, ConsumerConfig config) {
+    return new RabbitMQConsumer(config.getConnectionConfig(), config.getPrefetchCount(), config.getQueueName(), config.isRequeueOnFail(), declarator, reporter);
   }
 
   @Override
@@ -81,7 +80,8 @@ public class RabbitMQSpout extends BaseRichSpout {
 
   @Override
   public void nextTuple() {
-    if (!active) return;
+    if (!active)
+      return;
     Message message;
     while ((message = consumer.nextMessage()) != Message.NONE) {
       List<Object> tuple = extractTuple(message);
@@ -91,9 +91,7 @@ public class RabbitMQSpout extends BaseRichSpout {
     }
   }
 
-  protected List<Integer> emit(List<Object> tuple,
-                               Message message,
-                               SpoutOutputCollector spoutOutputCollector) {
+  protected List<Integer> emit(List<Object> tuple, Message message, SpoutOutputCollector spoutOutputCollector) {
     return spoutOutputCollector.emit(tuple, getDeliveryTag(message));
   }
 
@@ -111,19 +109,22 @@ public class RabbitMQSpout extends BaseRichSpout {
       logger.warn("Deserialization error for msgId " + deliveryTag, e);
       collector.reportError(e);
     }
-    // get the malformed message out of the way by dead-lettering (if dead-lettering is configured) and move on
+    // get the malformed message out of the way by dead-lettering (if
+    // dead-lettering is configured) and move on
     consumer.deadLetter(deliveryTag);
     return Collections.emptyList();
   }
 
   @Override
   public void ack(Object msgId) {
-    if (msgId instanceof Long) consumer.ack((Long) msgId);
+    if (msgId instanceof Long)
+      consumer.ack((Long) msgId);
   }
 
   @Override
   public void fail(Object msgId) {
-    if (msgId instanceof Long) consumer.fail((Long) msgId);
+    if (msgId instanceof Long)
+      consumer.fail((Long) msgId);
   }
 
   @Override
@@ -132,15 +133,13 @@ public class RabbitMQSpout extends BaseRichSpout {
   }
 
   @Override
-  public void deactivate()
-  {
+  public void deactivate() {
     super.deactivate();
     active = false;
   }
 
   @Override
-  public void activate()
-  {
+  public void activate() {
     super.activate();
     active = true;
   }

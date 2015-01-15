@@ -1,14 +1,12 @@
 package io.latent.storm.rabbitmq.config;
 
-public final class ConsumerConfigBuilder
-{
+public final class ConsumerConfigBuilder {
   private ConnectionConfig connectionConfig;
   private int prefetchCount;
   private String queueName;
   private boolean requeueOnFail;
 
-  public ConsumerConfigBuilder()
-  {
+  public ConsumerConfigBuilder() {
   }
 
   public ConsumerConfigBuilder connection(ConnectionConfig connection) {

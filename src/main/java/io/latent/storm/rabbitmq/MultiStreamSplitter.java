@@ -25,3 +25,4 @@ public interface MultiStreamSplitter extends Serializable {
   String selectStream(List<Object> tuple,
                       Message message);
 }
+ 

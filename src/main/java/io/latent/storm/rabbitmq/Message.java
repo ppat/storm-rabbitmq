@@ -1,8 +1,10 @@
 package io.latent.storm.rabbitmq;
 
-import com.rabbitmq.client.QueueingConsumer;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+
+import com.rabbitmq.client.QueueingConsumer;
 
 public class Message {
   public static final Message NONE = new None();
@@ -67,24 +69,101 @@ public class Message {
       userId = delivery.getProperties().getUserId();
     }
 
-    public boolean isRedelivery() { return redelivery; }
-    public long getDeliveryTag() { return deliveryTag; }
-    public String getRoutingKey() { return routingKey; }
-    public String getExchange() { return exchange; }
-    public String getClassName() { return className;}
-    public String getClusterId(){ return clusterId; }
-    public String getContentEncoding() { return contentEncoding; }
-    public String getContentType() { return contentType; }
-    public String getCorrelationId() { return correlationId; }
-    public Integer getDeliveryMode() { return deliveryMode; }
-    public String getExpiration() { return expiration; }
-    public Map<String, Object> getHeaders() { return headers; }
-    public String getMessageId() { return messageId; }
-    public Integer getPriority() { return priority; }
-    public String getReplyTo() { return replyTo; }
-    public Date getTimestamp() { return timestamp; }
-    public String getType() { return type; }
-    public String getUserId() { return userId; }
+    public boolean isRedelivery() {
+      return redelivery;
+    }
+
+    public long getDeliveryTag() {
+      return deliveryTag;
+    }
+
+    public String getRoutingKey() {
+      return routingKey;
+    }
+
+    public String getExchange() {
+      return exchange;
+    }
+
+    public String getClassName() {
+      return className;
+    }
+
+    public String getClusterId() {
+      return clusterId;
+    }
+
+    public String getContentEncoding() {
+      return contentEncoding;
+    }
+
+    public String getContentType() {
+      return contentType;
+    }
+
+    public String getCorrelationId() {
+      return correlationId;
+    }
+
+    public Integer getDeliveryMode() {
+      return deliveryMode;
+    }
+
+    public String getExpiration() {
+      return expiration;
+    }
+
+    public Map<String, Object> getHeaders() {
+      return headers;
+    }
+
+    public String getMessageId() {
+      return messageId;
+    }
+
+    public Integer getPriority() {
+      return priority;
+    }
+
+    public String getReplyTo() {
+      return replyTo;
+    }
+
+    public Date getTimestamp() {
+      return timestamp;
+    }
+
+    public String getType() {
+      return type;
+    }
+
+    public String getUserId() {
+      return userId;
+    }
+  }
+
+  /**
+   * This is a simple extension of the {@link Message} object that also contains
+   * a {@link Map} of {@link String} to {@link Object} representing the headers
+   * for this data.
+   */
+  public static class MessageWithHeaders extends Message {
+    private final Map<String, Object> headers;
+
+    public MessageWithHeaders(byte[] body) {
+      super(body);
+      this.headers = new HashMap<String, Object>();
+    }
+
+    public MessageWithHeaders(byte[] body, final Map<String, Object> headers) {
+      super(body);
+      this.headers = headers;
+    }
+
+    public Map<String, Object> getHeaders() {
+      return headers;
+    }
+
   }
 
   public static class None extends Message {
@@ -93,6 +172,8 @@ public class Message {
     }
 
     @Override
-    public byte[] getBody() { throw new UnsupportedOperationException(); };
+    public byte[] getBody() {
+      throw new UnsupportedOperationException();
+    };
   }
 }
