@@ -1,6 +1,9 @@
 package io.latent.storm.rabbitmq.config;
 
-import com.rabbitmq.client.ConnectionFactory;
+import static io.latent.storm.rabbitmq.config.ConfigUtils.addToMap;
+import static io.latent.storm.rabbitmq.config.ConfigUtils.getFromMap;
+import static io.latent.storm.rabbitmq.config.ConfigUtils.getFromMapAsBoolean;
+import static io.latent.storm.rabbitmq.config.ConfigUtils.getFromMapAsInt;
 
 import java.io.Serializable;
 import java.net.URISyntaxException;
@@ -9,12 +12,15 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.latent.storm.rabbitmq.config.ConfigUtils.addToMap;
-import static io.latent.storm.rabbitmq.config.ConfigUtils.getFromMap;
-import static io.latent.storm.rabbitmq.config.ConfigUtils.getFromMapAsInt;
+import com.rabbitmq.client.ConnectionFactory;
 
 public class ConnectionConfig implements Serializable {
 
+    /**
+     * Serial version UID.
+     */
+    private static final long serialVersionUID = 1L;
+    
     // Use named parameters
     private String host;
     private int port;
@@ -22,6 +28,7 @@ public class ConnectionConfig implements Serializable {
     private String password;
     private String virtualHost;
     private int heartBeat;
+    private boolean ssl;
 
     // Use AMQP URI http://www.rabbitmq.com/uri-spec.html
     private String uri;
@@ -37,7 +44,13 @@ public class ConnectionConfig implements Serializable {
     public ConnectionConfig(String host,
                             String username,
                             String password) {
-        this(host, ConnectionFactory.DEFAULT_AMQP_PORT, username, password, ConnectionFactory.DEFAULT_VHOST, 10);
+        this(host, ConnectionFactory.DEFAULT_AMQP_PORT, username, password, ConnectionFactory.DEFAULT_VHOST, 10, false);
+    }
+    
+    public ConnectionConfig(String host,
+            String username,
+            String password, boolean ssl) {
+        this(host, ConnectionFactory.DEFAULT_AMQP_PORT, username, password, ConnectionFactory.DEFAULT_VHOST, 10, ssl);
     }
 
     public ConnectionConfig(String host,
@@ -46,14 +59,19 @@ public class ConnectionConfig implements Serializable {
                             String password,
                             String virtualHost,
                             int heartBeat) {
+        this(host,port,username,password,virtualHost,heartBeat,false);
+    }
+
+    public ConnectionConfig(String host, int port, String username, String password, String virtualHost, int heartBeat, boolean ssl) {
         this.host = host;
         this.port = port;
         this.username = username;
         this.password = password;
         this.virtualHost = virtualHost;
         this.heartBeat = heartBeat;
-    }
-
+        this.ssl = ssl;
+      }
+    
     public String getHost() {
         return host;
     }
@@ -81,6 +99,10 @@ public class ConnectionConfig implements Serializable {
     public String getUri() {
         return uri;
     }
+    
+    boolean isSsl(){
+        return this.ssl;
+    }
 
     public ConnectionFactory asConnectionFactory() {
         ConnectionFactory factory = new ConnectionFactory();
@@ -101,6 +123,15 @@ public class ConnectionConfig implements Serializable {
             factory.setPassword(password);
             factory.setVirtualHost(virtualHost);
             factory.setRequestedHeartbeat(heartBeat);
+            if(ssl){
+                try {
+                    factory.useSslProtocol();
+                } catch (KeyManagementException e) {
+                    throw new RuntimeException(e);
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
         return factory;
     }
@@ -114,7 +145,8 @@ public class ConnectionConfig implements Serializable {
                     getFromMap("rabbitmq.username", stormConfig, ConnectionFactory.DEFAULT_USER),
                     getFromMap("rabbitmq.password", stormConfig, ConnectionFactory.DEFAULT_PASS),
                     getFromMap("rabbitmq.virtualhost", stormConfig, ConnectionFactory.DEFAULT_VHOST),
-                    getFromMapAsInt("rabbitmq.heartbeat", stormConfig, ConnectionFactory.DEFAULT_HEARTBEAT));
+                    getFromMapAsInt("rabbitmq.heartbeat", stormConfig, ConnectionFactory.DEFAULT_HEARTBEAT),
+                    getFromMapAsBoolean("rabbitmq.ssl", stormConfig, false));
         }
     }
 
@@ -129,6 +161,7 @@ public class ConnectionConfig implements Serializable {
             addToMap("rabbitmq.password", map, password);
             addToMap("rabbitmq.virtualhost", map, virtualHost);
             addToMap("rabbitmq.heartbeat", map, heartBeat);
+            addToMap("rabbitmq.ssl", map, ssl);
         }
         return map;
     }
