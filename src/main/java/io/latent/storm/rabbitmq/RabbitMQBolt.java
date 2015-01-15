@@ -73,7 +73,7 @@ public class RabbitMQBolt extends BaseRichBolt {
 
   @Override
   public void declareOutputFields(final OutputFieldsDeclarer declarer) {
-    String[] fields = scheme.getOutputFields();
+    final String[] fields = scheme.getOutputFields();
     if(fields != null && fields.length > 0){
       declarer.declare(new Fields(fields));
     }
