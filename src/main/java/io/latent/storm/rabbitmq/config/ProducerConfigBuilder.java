@@ -1,15 +1,13 @@
 package io.latent.storm.rabbitmq.config;
 
-public class ProducerConfigBuilder
-{
+public class ProducerConfigBuilder {
   private ConnectionConfig connectionConfig;
   private String exchangeName;
   private String contentType;
   private String contentEncoding;
   private boolean persistent = false;
 
-  public ProducerConfigBuilder()
-  {
+  public ProducerConfigBuilder() {
   }
 
   public ProducerConfigBuilder connection(ConnectionConfig connection) {
@@ -37,8 +35,7 @@ public class ProducerConfigBuilder
     return this;
   }
 
-  public ProducerConfig build()
-  {
+  public ProducerConfig build() {
     return new ProducerConfig(connectionConfig, exchangeName, contentType, contentEncoding, persistent);
   }
 }
