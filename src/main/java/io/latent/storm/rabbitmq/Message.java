@@ -1,8 +1,10 @@
 package io.latent.storm.rabbitmq;
 
-import com.rabbitmq.client.QueueingConsumer;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+
+import com.rabbitmq.client.QueueingConsumer;
 
 public class Message {
   public static final Message NONE = new None();
@@ -94,5 +96,29 @@ public class Message {
 
     @Override
     public byte[] getBody() { throw new UnsupportedOperationException(); };
+  }
+  
+  /**
+   * This is a simple extension of the {@link Message} object that also contains
+   * a {@link Map} of {@link String} to {@link Object} representing the headers
+   * for this data.
+   */
+  public static class MessageWithHeaders extends Message {
+    private final Map<String, Object> headers;
+
+    public MessageWithHeaders(byte[] body) {
+      super(body);
+      this.headers = new HashMap<String, Object>();
+    }
+
+    public MessageWithHeaders(byte[] body, final Map<String, Object> headers) {
+      super(body);
+      this.headers = headers;
+    }
+
+    public Map<String, Object> getHeaders() {
+      return headers;
+    }
+
   }
 }

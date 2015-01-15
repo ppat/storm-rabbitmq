@@ -1,14 +1,25 @@
 package io.latent.storm.rabbitmq;
 
-import backtype.storm.topology.ReportedFailedException;
-import com.rabbitmq.client.*;
+import io.latent.storm.rabbitmq.Message.MessageWithHeaders;
 import io.latent.storm.rabbitmq.config.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import backtype.storm.topology.ReportedFailedException;
+
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.AlreadyClosedException;
+import com.rabbitmq.client.BlockedListener;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ShutdownListener;
+import com.rabbitmq.client.ShutdownSignalException;
 
 public class RabbitMQProducer implements Serializable {
   private final Declarator declarator;
@@ -60,6 +71,7 @@ public class RabbitMQProducer implements Serializable {
                                                                 .contentType(producerConfig.getContentType())
                                                                 .contentEncoding(producerConfig.getContentEncoding())
                                                                 .deliveryMode((producerConfig.isPersistent()) ? 2 : 1)
+                                                                .headers(getHeaders(message))
                                                                 .build();
       channel.basicPublish(producerConfig.getExchangeName(), routingKey, properties, message.getBody());
     } catch (AlreadyClosedException ace) {
@@ -151,5 +163,23 @@ public class RabbitMQProducer implements Serializable {
     });
     logger.info("connected to rabbitmq: " + connection + " for " + producerConfig.getExchangeName());
     return connection;
+  }
+  
+  /**
+   * This method will simply pull the headers out of a {@link Message} if the
+   * type is a {@link MessageWithHeaders}. Otherwise it spits back an empty
+   * {@link HashMap}.
+   * 
+   * @param message
+   *          The {@link Message} object to get headers from
+   * @return The headers from the {@link MessageWithHeaders} or an empty
+   *         {@link Map} of headers
+   */
+  private Map<String, Object> getHeaders(final Message message) {
+    Map<String, Object> headers = new HashMap<String, Object>();
+    if (message instanceof MessageWithHeaders) {
+      headers = ((MessageWithHeaders) message).getHeaders();
+    }
+    return headers;
   }
 }
