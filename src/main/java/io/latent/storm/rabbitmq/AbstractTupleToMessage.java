@@ -1,5 +1,7 @@
 package io.latent.storm.rabbitmq;
 
+import java.util.Map;
+
 import backtype.storm.task.OutputCollector;
 import backtype.storm.tuple.Tuple;
 
@@ -16,20 +18,11 @@ public abstract class AbstractTupleToMessage implements TupleToMessage {
    */
   private static final long serialVersionUID = 1L;
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean isDrain() {
-    return true;
-  }
+  protected OutputCollector collector;
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
-  public void emitTuples(OutputCollector collector, Tuple input) {
-    throw new IllegalArgumentException("Implementations of this abstract class must override this method.");
+  public void prepare(@SuppressWarnings("rawtypes") Map stormConfig, OutputCollector collector) {
+    this.collector = collector;
   }
 
   /**
@@ -37,7 +30,6 @@ public abstract class AbstractTupleToMessage implements TupleToMessage {
    */
   @Override
   public String[] getOutputFields() {
-    return new String[] {};
+    return NO_FIELDS;
   }
-
 }

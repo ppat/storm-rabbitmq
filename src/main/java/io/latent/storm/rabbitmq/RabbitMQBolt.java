@@ -62,12 +62,12 @@ public class RabbitMQBolt extends BaseRichBolt {
     logger = LoggerFactory.getLogger(RabbitMQProducer.class);
     this.collector = collector;
     logger.info("Successfully prepared RabbitMQBolt");
+    this.scheme.prepare(stormConf, collector);
   }
 
   @Override
   public void execute(final Tuple input) {
     producer.send(scheme.produceMessage(input), routingKey);
-    scheme.emitTuples(collector, input);
     collector.ack(input);
   }
 

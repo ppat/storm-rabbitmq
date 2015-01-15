@@ -1,6 +1,7 @@
 package io.latent.storm.rabbitmq;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.tuple.Tuple;
@@ -16,6 +17,13 @@ import backtype.storm.tuple.Tuple;
  */
 public interface TupleToMessage extends Serializable {
 
+  public static final String[] NO_FIELDS = new String[] {};
+
+  /**
+   * This method will be called to initialize
+   */
+  void prepare(@SuppressWarnings("rawtypes") Map stormConfig, OutputCollector collector);
+
   /**
    * Convert the incoming {@link Tuple} on the Storm stream to a {@link Message}
    * for posting to RabbitMQ.
@@ -25,25 +33,6 @@ public interface TupleToMessage extends Serializable {
    * @return The {@link Message} for the {@link RabbitMQProducer} to publish
    */
   Message produceMessage(Tuple input);
-
-  /**
-   * 
-   * @return Whether or not this {@link RabbitMQBolt} is simply a drain, or if
-   *         it will emit {@link Tuple}s as well
-   */
-  boolean isDrain();
-
-  /**
-   * If this {@link TupleToMessage} is NOT a drain, then it should implement
-   * this method to convert the incoming {@link Tuple} into a new one to emit
-   * here.
-   * 
-   * @param collector
-   *          The {@link OutputCollector} from the bolt
-   * @param input
-   *          The incoming {@link Tuple} to massage
-   */
-  void emitTuples(OutputCollector collector, Tuple input);
 
   /**
    * If this {@link TupleToMessage} is NOT a drain, then it should implement
