@@ -21,7 +21,7 @@ public abstract class AbstractTupleToMessage implements TupleToMessage {
   /**
    * {@link OutputCollector} object for emitting {@link Tuple}s.
    */
-  protected OutputCollector collector;
+  protected transient OutputCollector collector;
 
   /**
    * {@inheritDoc}
