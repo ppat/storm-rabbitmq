@@ -31,11 +31,4 @@ public abstract class AbstractTupleToMessage implements TupleToMessage {
     this.collector = collector;
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public String[] getOutputFields() {
-    return NO_FIELDS;
-  }
 }

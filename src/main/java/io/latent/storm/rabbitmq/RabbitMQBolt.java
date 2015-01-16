@@ -10,7 +10,6 @@ import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
-import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 
 /**
@@ -37,18 +36,49 @@ public class RabbitMQBolt extends BaseRichBolt {
   private transient RabbitMQProducer producer;
   private transient OutputCollector collector;
 
+  /**
+   * Construct a new {@link RabbitMQBolt} using the default routing key ("")
+   * and the provided {@link TupleToMessage}.
+   * 
+   * @param scheme Object that will serialize incoming 
+   *    {@link Tuple}s into {@link Message} objects
+   */
   public RabbitMQBolt(final TupleToMessage scheme) {
     this(scheme, new Declarator.NoOp(), "");
   }
 
+  /**
+   * Construct a new {@link RabbitMQBolt}.
+   * 
+   * @param scheme The {@link TupleToMessage} to convert {@link Tuple}s into {@link Message}
+   *    objects
+   * @param routingKey The routing key to use when publishing to an exchange
+   */
   public RabbitMQBolt(final TupleToMessage scheme, final String routingKey) {
     this(scheme, new Declarator.NoOp(), routingKey);
   }
 
+  /**
+   * Construct a new {@link RabbitMQBolt} using the default routing key ("").
+   * 
+   * @param scheme The {@link TupleToMessage} to convert {@link Tuple}s into {@link Message} 
+   *    objects
+   * @param declarator The {@link Declarator} to initialize the exchange you're publishing
+   *    {@link Message}s to
+   */
   public RabbitMQBolt(final TupleToMessage scheme, final Declarator declarator) {
     this(scheme, declarator, "");
   }
 
+  /**
+   * Construct a new {@link RabbitMQBolt}.
+   * 
+   * @param scheme The {@link TupleToMessage} to convert {@link Tuple}s into {@link Message} 
+   *    objects
+   * @param declaratorThe {@link Declarator} to initialize the exchange you're publishing
+   *    {@link Message}s to
+   * @param routingKey The routing key to use when posting messages to the configured exchange
+   */
   public RabbitMQBolt(final TupleToMessage scheme, final Declarator declarator, final String routingKey) {
     this.scheme = scheme;
     this.declarator = declarator;
@@ -61,8 +91,8 @@ public class RabbitMQBolt extends BaseRichBolt {
     producer.open(stormConf);
     logger = LoggerFactory.getLogger(RabbitMQProducer.class);
     this.collector = collector;
-    logger.info("Successfully prepared RabbitMQBolt");
     this.scheme.prepare(stormConf, collector);
+    logger.info("Successfully prepared RabbitMQBolt");
   }
 
   @Override
@@ -73,10 +103,7 @@ public class RabbitMQBolt extends BaseRichBolt {
 
   @Override
   public void declareOutputFields(final OutputFieldsDeclarer declarer) {
-    final String[] fields = scheme.getOutputFields();
-    if(fields != null && fields.length > 0){
-      declarer.declare(new Fields(fields));
-    }
+    //No fields are emitted from this drain.
   }
 
 }
