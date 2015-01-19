@@ -187,5 +187,73 @@ RabbitMQMessageScheme.Properties properties = tuple.getValueByField("myMessagePr
 All standard RabbitMQ envelope and message properties are available. See RabbitMQMessageScheme.java for the full interface.
 
 
+## RabbitMQ as a Sink
 
+There may be times when you wish to send messages to RabbitMQ at the end of one of the stream within your topology. 
 
+First you need to provide an implementation of `TupleToMessage`. This indicates how to transform an incoming tuple within your stream into a RabbitMQ Message.
+
+```java
+TupleToMessage scheme = new TupleToMessage() {
+  @Override
+  byte[] extractBody(Tuple input) { return input.getStringByField("my-message-body").getBytes(); }
+
+  @Override
+  String determineExchangeName(Tuple input) { return input.getStringByField("exchange-to-publish-to"); }
+
+  @Override
+  String determineRoutingKey(Tuple input) { return input.getStringByField("my-routing-key"); }
+
+  @Override
+  Map<String, Object> specifiyHeaders(Tuple input) { return new HashMap<String, Object>(); }
+
+  @Override
+  String specifyContentType(Tuple input) { return "application/json"; }
+
+  @Override
+  String specifyContentEncoding(Tuple input) { return "UTF-8"; }
+
+  @Override
+  boolean specifyMessagePersistence(Tuple input) { return false; }
+};
+```
+
+Then you need your RabbitMQ connection config (just like we did for the spout before).
+
+```java
+ConnectionConfig connectionConfig = new ConnectionConfig("localhost", 5672, "guest", "guest", ConnectionFactory.DEFAULT_VHOST, 10); // host, port, username, password, virtualHost, heartBeat 
+ProducerConfig sinkConfig = new ProducerConfigBuilder().connection(connectionConfig).build();
+```                                                        
+
+Now we are ready to add RabbitMQBolt as a sink to your topology.
+
+```java
+TopologyBuilder builder = new TopologyBuilder
+...
+builder.setBolt("rabbitmq-sink", new RabbitMQBolt(scheme))
+       .addConfigurations(sinkConfig)
+       .shuffleGrouping("previous-bolt")
+```       
+
+### When message attributes are non-dynamic
+
+Sometimes your message attributes (exchange name, routing key, content-type, etc..) do not change on a message basis and are fixed per topology. When this is the case you can use `` to provide a more simplified implementation by providing the required fields (exchange name, routing key) via storm configuration.
+
+```java
+TupleToMessage scheme = new TupleToMessageNonDynamic() {
+  @Override
+  byte[] extractBody(Tuple input) { return input.getStringByField("my-message-body").getBytes(); }
+};
+ConnectionConfig connectionConfig = new ConnectionConfig("localhost", 5672, "guest", "guest", ConnectionFactory.DEFAULT_VHOST, 10); // host, port, username, password, virtualHost, heartBeat 
+ProducerConfig sinkConfig = new ProducerConfigBuilder()
+    .connection(connectionConfig)
+    .contentEncoding("UTF-8")
+    .contentType("application/json")
+    .exchange("exchange-to-publish-to")
+    .routingKey("")
+    .build();
+...
+builder.setBolt("rabbitmq-sink", new RabbitMQBolt(scheme))
+       .addConfigurations(sinkConfig)
+       .shuffleGrouping("previous-bolt")
+```
