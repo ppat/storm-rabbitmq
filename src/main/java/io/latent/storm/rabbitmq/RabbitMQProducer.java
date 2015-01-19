@@ -1,32 +1,22 @@
 package io.latent.storm.rabbitmq;
 
-import io.latent.storm.rabbitmq.Message.MessageWithHeaders;
+import backtype.storm.topology.ReportedFailedException;
+import com.rabbitmq.client.*;
+import io.latent.storm.rabbitmq.config.ConnectionConfig;
 import io.latent.storm.rabbitmq.config.ProducerConfig;
-
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import backtype.storm.topology.ReportedFailedException;
-
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.AlreadyClosedException;
-import com.rabbitmq.client.BlockedListener;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ShutdownListener;
-import com.rabbitmq.client.ShutdownSignalException;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.Map;
 
 public class RabbitMQProducer implements Serializable {
   private final Declarator declarator;
 
   private transient Logger logger;
 
-  private transient ProducerConfig producerConfig;
+  private transient ConnectionConfig connectionConfig;
   private transient Connection connection;
   private transient Channel channel;
 
@@ -42,38 +32,33 @@ public class RabbitMQProducer implements Serializable {
   }
 
   public void send(Message message) {
-    send(message, "");
+    if (message == Message.NONE) return;
+    sendMessageWhenNotBlocked((Message.MessageForSending) message);
   }
 
-  public void send(Message message,
-                   String routingKey) { sendMessageWhenNotBlocked(message, routingKey); }
-
-  public void sendMessageWhenNotBlocked(Message message,
-                                        String routingKey)
-  {
+  private void sendMessageWhenNotBlocked(Message.MessageForSending message) {
     while (true) {
       if (blocked) {
         try { Thread.sleep(100); } catch (InterruptedException ie) { }
       } else {
-        sendMessageActual(message, routingKey);
+        sendMessageActual(message);
         return;
       }
     }
   }
 
-  private void sendMessageActual(Message message,
-                                 String routingKey) {
-    if (message == Message.NONE) return;
+  private void sendMessageActual(Message.MessageForSending message) {
+
     reinitIfNecessary();
     if (channel == null) throw new ReportedFailedException("No connection to RabbitMQ");
     try {
       AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
-                                                                .contentType(producerConfig.getContentType())
-                                                                .contentEncoding(producerConfig.getContentEncoding())
-                                                                .deliveryMode((producerConfig.isPersistent()) ? 2 : 1)
-                                                                .headers(getHeaders(message))
+                                                                .contentType(message.getContentType())
+                                                                .contentEncoding(message.getContentEncoding())
+                                                                .deliveryMode((message.isPersistent()) ? 2 : 1)
+                                                                .headers(message.getHeaders())
                                                                 .build();
-      channel.basicPublish(producerConfig.getExchangeName(), routingKey, properties, message.getBody());
+      channel.basicPublish(message.getExchangeName(), message.getRoutingKey(), properties, message.getBody());
     } catch (AlreadyClosedException ace) {
       logger.error("already closed exception while attempting to send message", ace);
       reset();
@@ -90,7 +75,7 @@ public class RabbitMQProducer implements Serializable {
 
   public void open(final Map config) {
     logger = LoggerFactory.getLogger(RabbitMQProducer.class);
-    producerConfig = ProducerConfig.getFromStormConfig(config);
+    connectionConfig = ProducerConfig.getFromStormConfig(config).getConnectionConfig();
     internalOpen();
   }
 
@@ -102,7 +87,7 @@ public class RabbitMQProducer implements Serializable {
       // run any declaration prior to message sending
       declarator.execute(channel);
     } catch (Exception e) {
-      logger.error("could not open connection on exchange " + producerConfig.getExchangeName());
+      logger.error("could not open connection on rabbitmq", e);
       reset();
     }
   }
@@ -137,7 +122,7 @@ public class RabbitMQProducer implements Serializable {
   }
 
   private Connection createConnection() throws IOException {
-    Connection connection = producerConfig.getConnectionConfig().asConnectionFactory().newConnection();
+    Connection connection = connectionConfig.asConnectionFactory().newConnection();
     connection.addShutdownListener(new ShutdownListener() {
       @Override
       public void shutdownCompleted(ShutdownSignalException cause) {
@@ -161,25 +146,7 @@ public class RabbitMQProducer implements Serializable {
         logger.warn(String.format("Got unblocked by rabbitmq"));
       }
     });
-    logger.info("connected to rabbitmq: " + connection + " for " + producerConfig.getExchangeName());
+    logger.info("connected to rabbitmq: " + connection);
     return connection;
-  }
-  
-  /**
-   * This method will simply pull the headers out of a {@link Message} if the
-   * type is a {@link MessageWithHeaders}. Otherwise it spits back an empty
-   * {@link HashMap}.
-   * 
-   * @param message
-   *          The {@link Message} object to get headers from
-   * @return The headers from the {@link MessageWithHeaders} or an empty
-   *         {@link Map} of headers
-   */
-  private Map<String, Object> getHeaders(final Message message) {
-    Map<String, Object> headers = new HashMap<String, Object>();
-    if (message instanceof MessageWithHeaders) {
-      headers = ((MessageWithHeaders) message).getHeaders();
-    }
-    return headers;
   }
 }

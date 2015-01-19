@@ -1,24 +1,19 @@
 package io.latent.storm.rabbitmq;
 
-import java.io.Serializable;
-import java.util.Map;
-
-import backtype.storm.task.OutputCollector;
 import backtype.storm.tuple.Tuple;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This interface describes an object that will perform the work of mapping
  * incoming {@link Tuple}s to {@link Message} objects for posting on a RabbitMQ
  * exchange.
- * 
+ *
  */
-public interface TupleToMessage extends Serializable {
-
-  /**
-   * This method will be called to initialize this 
-   * {@link TupleToMessage} object.
-   */
-  void prepare(@SuppressWarnings("rawtypes") Map stormConfig, OutputCollector collector);
+public abstract class TupleToMessage implements Serializable {
+  abstract void prepare(@SuppressWarnings("rawtypes") Map stormConfig);
 
   /**
    * Convert the incoming {@link Tuple} on the Storm stream to a {@link Message}
@@ -26,8 +21,96 @@ public interface TupleToMessage extends Serializable {
    * 
    * @param input
    *          The incoming {@link Tuple} from Storm
-   * @return The {@link Message} for the {@link RabbitMQProducer} to publish
+   * @return The {@link Message} for the {@link RabbitMQProducer} to publish. If
+   *          transformation fails this should return Message.NONE.
    */
-  Message produceMessage(Tuple input);
+  Message produceMessage(Tuple input) {
+    return Message.forSending(
+        extractBody(input),
+        specifiyHeaders(),
+        determineExchangeName(input),
+        determineRoutingKey(input),
+        specifyContentType(input),
+        specifyContentEncoding(input),
+        specifyMessagePersistence(input)
+    );
+  }
 
+  /**
+   * Extract message body as a byte array from the incoming tuple. This is required.
+   * This implementation must handle errors and should return null upon on unresolvable
+   * errors.
+   *
+   * @param input the incoming tuple
+   * @return message body as a byte array or null if extraction cannot be performed
+   */
+  abstract byte[] extractBody(Tuple input);
+
+  /**
+   * Determine the exchange where the message is published to. This can be
+   * derived based on the incoming tuple or a fixed value.
+   *
+   * @param input the incoming tuple
+   * @return the exchange where the message is published to.
+   */
+  abstract String determineExchangeName(Tuple input);
+
+  /**
+   * Determine the routing key used for this message. This can be derived based on
+   * the incoming tuple or a fixed value. Default implementation provides no
+   * routing key.
+   *
+   * @param input the incoming tuple
+   * @return the routing key for this message
+   */
+  String determineRoutingKey(Tuple input) {
+    return ""; // rabbitmq java client library treats "" as no routing key
+  }
+
+  /**
+   * Specify the headers to be sent along with this message. The default implementation
+   * return an empty map.
+   *
+   * @return the headers as a map
+   */
+  Map<String, Object> specifiyHeaders()
+  {
+    return new HashMap<String, Object>();
+  }
+
+  /**
+   * Specify message body content type. Default implementation skips the provision
+   * of this detail.
+   *
+   * @param input the incoming tuple
+   * @return content type
+   */
+  String specifyContentType(Tuple input) {
+    return null;
+  }
+
+  /**
+   * Specify message body content encoding. Default implementation skips the provision
+   * of this detail.
+   *
+   * @param input the incoming tuple
+   * @return content encoding
+   */
+  String specifyContentEncoding(Tuple input) {
+    return null;
+  }
+
+  /**
+   * Specify whether each individual message should make use of message persistence
+   * when it's on a rabbitmq queue. This does imply queue durability or high availability
+   * or just avoidance of message loss. To accomplish that please read rabbitmq docs
+   * on High Availability, Publisher Confirms and Queue Durability in addition to
+   * having this return true. By default, message persistence returns false.
+   *
+   * @param input the incoming tuple
+   * @return whether the message should be persistent to disk or not. Defaults to not.
+   */
+  boolean specifyMessagePersistence(Tuple input) {
+    return false;
+  }
 }

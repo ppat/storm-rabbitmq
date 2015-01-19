@@ -4,6 +4,7 @@ public class ProducerConfigBuilder
 {
   private ConnectionConfig connectionConfig;
   private String exchangeName;
+  private String routingKey;
   private String contentType;
   private String contentEncoding;
   private boolean persistent = false;
@@ -19,6 +20,11 @@ public class ProducerConfigBuilder
 
   public ProducerConfigBuilder exchange(String exchange) {
     this.exchangeName = exchange;
+    return this;
+  }
+
+  public ProducerConfigBuilder routingKey(String routingKey) {
+    this.routingKey = routingKey;
     return this;
   }
 
@@ -39,6 +45,6 @@ public class ProducerConfigBuilder
 
   public ProducerConfig build()
   {
-    return new ProducerConfig(connectionConfig, exchangeName, contentType, contentEncoding, persistent);
+    return new ProducerConfig(connectionConfig, exchangeName, routingKey, contentType, contentEncoding, persistent);
   }
 }

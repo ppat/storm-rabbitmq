@@ -22,67 +22,22 @@ import backtype.storm.tuple.Tuple;
  *
  */
 public class RabbitMQBolt extends BaseRichBolt {
-
-  /**
-   * Serial version UID.
-   */
-  private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 97236452008970L;
 
   private final TupleToMessage scheme;
   private final Declarator declarator;
-  private final String routingKey;
 
   private transient Logger logger;
   private transient RabbitMQProducer producer;
   private transient OutputCollector collector;
 
-  /**
-   * Construct a new {@link RabbitMQBolt} using the default routing key ("")
-   * and the provided {@link TupleToMessage}.
-   * 
-   * @param scheme Object that will serialize incoming 
-   *    {@link Tuple}s into {@link Message} objects
-   */
   public RabbitMQBolt(final TupleToMessage scheme) {
-    this(scheme, new Declarator.NoOp(), "");
+    this(scheme, new Declarator.NoOp());
   }
 
-  /**
-   * Construct a new {@link RabbitMQBolt}.
-   * 
-   * @param scheme The {@link TupleToMessage} to convert {@link Tuple}s into {@link Message}
-   *    objects
-   * @param routingKey The routing key to use when publishing to an exchange
-   */
-  public RabbitMQBolt(final TupleToMessage scheme, final String routingKey) {
-    this(scheme, new Declarator.NoOp(), routingKey);
-  }
-
-  /**
-   * Construct a new {@link RabbitMQBolt} using the default routing key ("").
-   * 
-   * @param scheme The {@link TupleToMessage} to convert {@link Tuple}s into {@link Message} 
-   *    objects
-   * @param declarator The {@link Declarator} to initialize the exchange you're publishing
-   *    {@link Message}s to
-   */
   public RabbitMQBolt(final TupleToMessage scheme, final Declarator declarator) {
-    this(scheme, declarator, "");
-  }
-
-  /**
-   * Construct a new {@link RabbitMQBolt}.
-   * 
-   * @param scheme The {@link TupleToMessage} to convert {@link Tuple}s into {@link Message} 
-   *    objects
-   * @param declaratorThe {@link Declarator} to initialize the exchange you're publishing
-   *    {@link Message}s to
-   * @param routingKey The routing key to use when posting messages to the configured exchange
-   */
-  public RabbitMQBolt(final TupleToMessage scheme, final Declarator declarator, final String routingKey) {
     this.scheme = scheme;
     this.declarator = declarator;
-    this.routingKey = routingKey;
   }
 
   @Override
@@ -91,19 +46,20 @@ public class RabbitMQBolt extends BaseRichBolt {
     producer.open(stormConf);
     logger = LoggerFactory.getLogger(RabbitMQProducer.class);
     this.collector = collector;
-    this.scheme.prepare(stormConf, collector);
+    this.scheme.prepare(stormConf);
     logger.info("Successfully prepared RabbitMQBolt");
   }
 
   @Override
-  public void execute(final Tuple input) {
-    producer.send(scheme.produceMessage(input), routingKey);
-    collector.ack(input);
+  public void execute(final Tuple tuple) {
+    producer.send(scheme.produceMessage(tuple));
+    // tuples are always acked, even when transformation by scheme yields Message.NONE as
+    // if it failed once it's unlikely to succeed when re-attempted (i.e. serialization/deserilization errors).
+    collector.ack(tuple);
   }
 
   @Override
   public void declareOutputFields(final OutputFieldsDeclarer declarer) {
     //No fields are emitted from this drain.
   }
-
 }

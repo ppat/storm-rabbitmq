@@ -19,8 +19,16 @@ public class Message {
     return (delivery != null) ? new DeliveredMessage(delivery) : NONE;
   }
 
-  public static Message forSending(byte[] body) {
-    return (body != null) ? new Message(body) : NONE;
+  public static Message forSending(byte[] body,
+                                   Map<String, Object> headers,
+                                   String exchangeName,
+                                   String routingKey,
+                                   String contentType,
+                                   String contentEncoding,
+                                   boolean persistent) {
+    return (body != null && exchangeName != null && exchangeName.length() > 0) ?
+        new MessageForSending(body, headers, exchangeName, routingKey, contentType, contentEncoding, persistent) :
+        NONE;
   }
 
   public byte[] getBody() {
@@ -97,28 +105,59 @@ public class Message {
     @Override
     public byte[] getBody() { throw new UnsupportedOperationException(); };
   }
-  
-  /**
-   * This is a simple extension of the {@link Message} object that also contains
-   * a {@link Map} of {@link String} to {@link Object} representing the headers
-   * for this data.
-   */
-  public static class MessageWithHeaders extends Message {
+
+  public static class MessageForSending extends Message {
     private final Map<String, Object> headers;
+    private final String exchangeName;
+    private final String routingKey;
+    private final String contentType;
+    private final String contentEncoding;
+    private final boolean persistent;
 
-    public MessageWithHeaders(byte[] body) {
+    private MessageForSending(byte[] body,
+                              Map<String, Object> headers,
+                              String exchangeName,
+                              String routingKey,
+                              String contentType,
+                              String contentEncoding,
+                              boolean persistent) {
       super(body);
-      this.headers = new HashMap<String, Object>();
+      this.headers = (headers != null) ? headers : new HashMap<String, Object>();
+      this.exchangeName = exchangeName;
+      this.routingKey = routingKey;
+      this.contentType = contentType;
+      this.contentEncoding = contentEncoding;
+      this.persistent = persistent;
     }
 
-    public MessageWithHeaders(byte[] body, final Map<String, Object> headers) {
-      super(body);
-      this.headers = headers;
-    }
-
-    public Map<String, Object> getHeaders() {
+    public Map<String, Object> getHeaders()
+    {
       return headers;
     }
 
+    public String getExchangeName()
+    {
+      return exchangeName;
+    }
+
+    public String getRoutingKey()
+    {
+      return routingKey;
+    }
+
+    public String getContentType()
+    {
+      return contentType;
+    }
+
+    public String getContentEncoding()
+    {
+      return contentEncoding;
+    }
+
+    public boolean isPersistent()
+    {
+      return persistent;
+    }
   }
 }
