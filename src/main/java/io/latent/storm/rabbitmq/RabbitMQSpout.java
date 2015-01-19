@@ -1,17 +1,19 @@
 package io.latent.storm.rabbitmq;
 
+import io.latent.storm.rabbitmq.config.ConsumerConfig;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import backtype.storm.spout.Scheme;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
-import io.latent.storm.rabbitmq.config.ConsumerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 /**
  * A simple RabbitMQ spout that emits an anchored tuple stream (on the default stream). This can be used with
@@ -28,18 +30,32 @@ public class RabbitMQSpout extends BaseRichSpout {
   private transient SpoutOutputCollector collector;
 
   private boolean active;
+  private String streamId;
 
   public RabbitMQSpout(Scheme scheme) {
-    this(MessageScheme.Builder.from(scheme), new Declarator.NoOp());
+    this(MessageScheme.Builder.from(scheme), new Declarator.NoOp(),null);
+  }
+  
+  public RabbitMQSpout(Scheme scheme, String streamId){
+      this(MessageScheme.Builder.from(scheme), new Declarator.NoOp(), streamId);
   }
 
   public RabbitMQSpout(Scheme scheme, Declarator declarator) {
-    this(MessageScheme.Builder.from(scheme), declarator);
+    this(MessageScheme.Builder.from(scheme), declarator,null);
   }
 
   public RabbitMQSpout(MessageScheme scheme, Declarator declarator) {
-    this.scheme = scheme;
-    this.declarator = declarator;
+    this(scheme,declarator,null);
+  }
+  
+  public RabbitMQSpout(Scheme scheme, Declarator declarator, String streamId){
+      this(MessageScheme.Builder.from(scheme), declarator, streamId);
+  }
+  
+  public RabbitMQSpout(MessageScheme scheme, Declarator declarator, String streamId){
+      this.scheme =scheme;
+      this.declarator =declarator;
+      this.streamId = streamId;
   }
 
   @Override
@@ -128,7 +144,11 @@ public class RabbitMQSpout extends BaseRichSpout {
 
   @Override
   public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-    outputFieldsDeclarer.declare(scheme.getOutputFields());
+    if(streamId == null){
+      outputFieldsDeclarer.declare(scheme.getOutputFields());
+    }else{
+      outputFieldsDeclarer.declareStream(streamId, scheme.getOutputFields());
+    }
   }
 
   @Override
