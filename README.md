@@ -237,7 +237,7 @@ builder.setBolt("rabbitmq-sink", new RabbitMQBolt(scheme))
 
 ### When message attributes are non-dynamic
 
-Sometimes your message attributes (exchange name, routing key, content-type, etc..) do not change on a message basis and are fixed per topology. When this is the case you can use `` to provide a more simplified implementation by providing the required fields (exchange name, routing key) via storm configuration.
+Sometimes your message attributes (exchange name, routing key, content-type, etc..) do not change on a message by message basis and are fixed per topology. When this is the case you can use `TupleToMessageNonDynamic` to provide a more simplified implementation by providing the required fields (exchange name, routing key) via storm configuration.
 
 ```java
 TupleToMessage scheme = new TupleToMessageNonDynamic() {
