@@ -13,7 +13,7 @@ import java.util.Map;
  *
  */
 public abstract class TupleToMessage implements Serializable {
-  abstract void prepare(@SuppressWarnings("rawtypes") Map stormConfig);
+  void prepare(@SuppressWarnings("rawtypes") Map stormConfig) {}
 
   /**
    * Convert the incoming {@link Tuple} on the Storm stream to a {@link Message}
@@ -27,7 +27,7 @@ public abstract class TupleToMessage implements Serializable {
   Message produceMessage(Tuple input) {
     return Message.forSending(
         extractBody(input),
-        specifiyHeaders(),
+        specifiyHeaders(input),
         determineExchangeName(input),
         determineRoutingKey(input),
         specifyContentType(input),
@@ -71,9 +71,10 @@ public abstract class TupleToMessage implements Serializable {
    * Specify the headers to be sent along with this message. The default implementation
    * return an empty map.
    *
+   * @param input the incoming tuple
    * @return the headers as a map
    */
-  Map<String, Object> specifiyHeaders()
+  Map<String, Object> specifiyHeaders(Tuple input)
   {
     return new HashMap<String, Object>();
   }
