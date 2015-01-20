@@ -1,10 +1,10 @@
 package io.latent.storm.rabbitmq;
 
-import backtype.storm.tuple.Tuple;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+
+import backtype.storm.tuple.Tuple;
 
 /**
  * This interface describes an object that will perform the work of mapping
@@ -13,7 +13,7 @@ import java.util.Map;
  *
  */
 public abstract class TupleToMessage implements Serializable {
-  void prepare(@SuppressWarnings("rawtypes") Map stormConfig) {}
+  protected void prepare(@SuppressWarnings("rawtypes") Map stormConfig) {}
 
   /**
    * Convert the incoming {@link Tuple} on the Storm stream to a {@link Message}
@@ -24,7 +24,7 @@ public abstract class TupleToMessage implements Serializable {
    * @return The {@link Message} for the {@link RabbitMQProducer} to publish. If
    *          transformation fails this should return Message.NONE.
    */
-  Message produceMessage(Tuple input) {
+  protected Message produceMessage(Tuple input) {
     return Message.forSending(
         extractBody(input),
         specifiyHeaders(input),
@@ -44,7 +44,7 @@ public abstract class TupleToMessage implements Serializable {
    * @param input the incoming tuple
    * @return message body as a byte array or null if extraction cannot be performed
    */
-  abstract byte[] extractBody(Tuple input);
+  protected abstract byte[] extractBody(Tuple input);
 
   /**
    * Determine the exchange where the message is published to. This can be
@@ -53,7 +53,7 @@ public abstract class TupleToMessage implements Serializable {
    * @param input the incoming tuple
    * @return the exchange where the message is published to.
    */
-  abstract String determineExchangeName(Tuple input);
+  protected abstract String determineExchangeName(Tuple input);
 
   /**
    * Determine the routing key used for this message. This can be derived based on
@@ -63,7 +63,7 @@ public abstract class TupleToMessage implements Serializable {
    * @param input the incoming tuple
    * @return the routing key for this message
    */
-  String determineRoutingKey(Tuple input) {
+  protected String determineRoutingKey(Tuple input) {
     return ""; // rabbitmq java client library treats "" as no routing key
   }
 
@@ -74,7 +74,7 @@ public abstract class TupleToMessage implements Serializable {
    * @param input the incoming tuple
    * @return the headers as a map
    */
-  Map<String, Object> specifiyHeaders(Tuple input)
+  protected Map<String, Object> specifiyHeaders(Tuple input)
   {
     return new HashMap<String, Object>();
   }
@@ -86,7 +86,7 @@ public abstract class TupleToMessage implements Serializable {
    * @param input the incoming tuple
    * @return content type
    */
-  String specifyContentType(Tuple input) {
+  protected String specifyContentType(Tuple input) {
     return null;
   }
 
@@ -97,7 +97,7 @@ public abstract class TupleToMessage implements Serializable {
    * @param input the incoming tuple
    * @return content encoding
    */
-  String specifyContentEncoding(Tuple input) {
+  protected String specifyContentEncoding(Tuple input) {
     return null;
   }
 
@@ -111,7 +111,7 @@ public abstract class TupleToMessage implements Serializable {
    * @param input the incoming tuple
    * @return whether the message should be persistent to disk or not. Defaults to not.
    */
-  boolean specifyMessagePersistence(Tuple input) {
+  protected boolean specifyMessagePersistence(Tuple input) {
     return false;
   }
 }

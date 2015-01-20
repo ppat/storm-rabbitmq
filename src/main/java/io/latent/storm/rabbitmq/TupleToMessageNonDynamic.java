@@ -1,9 +1,10 @@
 package io.latent.storm.rabbitmq;
 
-import backtype.storm.tuple.Tuple;
 import io.latent.storm.rabbitmq.config.ProducerConfig;
 
 import java.util.Map;
+
+import backtype.storm.tuple.Tuple;
 
 public abstract class TupleToMessageNonDynamic extends TupleToMessage
 {
@@ -14,7 +15,7 @@ public abstract class TupleToMessageNonDynamic extends TupleToMessage
   private boolean persistent;
 
   @Override
-  void prepare(@SuppressWarnings("rawtypes") Map stormConfig)
+  protected void prepare(@SuppressWarnings("rawtypes") Map stormConfig)
   {
     ProducerConfig producerConfig = ProducerConfig.getFromStormConfig(stormConfig);
     exchangeName = producerConfig.getExchangeName();
@@ -25,31 +26,31 @@ public abstract class TupleToMessageNonDynamic extends TupleToMessage
   }
 
   @Override
-  String determineExchangeName(Tuple input)
+  protected String determineExchangeName(Tuple input)
   {
     return exchangeName;
   }
 
   @Override
-  String determineRoutingKey(Tuple input)
+  protected String determineRoutingKey(Tuple input)
   {
     return routingKey;
   }
 
   @Override
-  String specifyContentType(Tuple input)
+  protected String specifyContentType(Tuple input)
   {
     return contentType;
   }
 
   @Override
-  String specifyContentEncoding(Tuple input)
+  protected String specifyContentEncoding(Tuple input)
   {
     return contentEncoding;
   }
 
   @Override
-  boolean specifyMessagePersistence(Tuple input)
+  protected boolean specifyMessagePersistence(Tuple input)
   {
     return persistent;
   }
