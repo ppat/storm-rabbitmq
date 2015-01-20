@@ -110,7 +110,8 @@ public class RabbitMQSpout extends BaseRichSpout {
   protected List<Integer> emit(List<Object> tuple,
                                Message message,
                                SpoutOutputCollector spoutOutputCollector) {
-    return spoutOutputCollector.emit(tuple, getDeliveryTag(message));
+    return streamId == null ? spoutOutputCollector.emit(tuple, getDeliveryTag(message)) : 
+      spoutOutputCollector.emit(streamId, tuple, getDeliveryTag(message));
   }
 
   private List<Object> extractTuple(Message message) {
