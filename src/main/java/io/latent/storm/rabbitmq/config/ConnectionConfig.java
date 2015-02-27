@@ -29,9 +29,11 @@ public class ConnectionConfig implements Serializable {
     private String virtualHost;
     private int heartBeat;
     private boolean ssl;
+    private boolean automaticRecovery;
 
     // Use AMQP URI http://www.rabbitmq.com/uri-spec.html
     private String uri;
+
 
     public static ConnectionConfig forTest() {
         return new ConnectionConfig(ConnectionFactory.DEFAULT_HOST, ConnectionFactory.DEFAULT_USER, ConnectionFactory.DEFAULT_PASS);
@@ -44,13 +46,19 @@ public class ConnectionConfig implements Serializable {
     public ConnectionConfig(String host,
                             String username,
                             String password) {
-        this(host, ConnectionFactory.DEFAULT_AMQP_PORT, username, password, ConnectionFactory.DEFAULT_VHOST, 10, false);
+        this(host, ConnectionFactory.DEFAULT_AMQP_PORT, username, password, ConnectionFactory.DEFAULT_VHOST, 10, false, false);
     }
     
     public ConnectionConfig(String host,
             String username,
             String password, boolean ssl) {
-        this(host, ConnectionFactory.DEFAULT_AMQP_PORT, username, password, ConnectionFactory.DEFAULT_VHOST, 10, ssl);
+        this(host, ConnectionFactory.DEFAULT_AMQP_PORT, username, password, ConnectionFactory.DEFAULT_VHOST, 10, ssl, false);
+    }
+    
+    public ConnectionConfig(String host,
+            String username,
+            String password, boolean ssl , boolean automaticRecovery) {
+        this(host, ConnectionFactory.DEFAULT_AMQP_PORT, username, password, ConnectionFactory.DEFAULT_VHOST, 10, ssl, automaticRecovery);
     }
 
     public ConnectionConfig(String host,
@@ -59,10 +67,10 @@ public class ConnectionConfig implements Serializable {
                             String password,
                             String virtualHost,
                             int heartBeat) {
-        this(host,port,username,password,virtualHost,heartBeat,false);
+        this(host,port,username,password,virtualHost,heartBeat,false, false);
     }
 
-    public ConnectionConfig(String host, int port, String username, String password, String virtualHost, int heartBeat, boolean ssl) {
+    public ConnectionConfig(String host, int port, String username, String password, String virtualHost, int heartBeat, boolean ssl, boolean automaticRecovery) {
         this.host = host;
         this.port = port;
         this.username = username;
@@ -70,6 +78,7 @@ public class ConnectionConfig implements Serializable {
         this.virtualHost = virtualHost;
         this.heartBeat = heartBeat;
         this.ssl = ssl;
+        this.automaticRecovery = automaticRecovery;
       }
     
     public String getHost() {
@@ -101,19 +110,19 @@ public class ConnectionConfig implements Serializable {
     }
     
     boolean isSsl(){
-        return this.ssl;
+        return ssl;
     }
 
     public ConnectionFactory asConnectionFactory() {
-        ConnectionFactory factory = new ConnectionFactory();
+        final ConnectionFactory factory = new ConnectionFactory();
         if (uri != null) {
             try {
                 factory.setUri(uri);
-            } catch (URISyntaxException e) {
+            } catch (final URISyntaxException e) {
                 throw new RuntimeException(e);
-            } catch (NoSuchAlgorithmException e) {
+            } catch (final NoSuchAlgorithmException e) {
                 throw new RuntimeException(e);
-            } catch (KeyManagementException e) {
+            } catch (final KeyManagementException e) {
                 throw new RuntimeException(e);
             }
         } else {
@@ -123,12 +132,13 @@ public class ConnectionConfig implements Serializable {
             factory.setPassword(password);
             factory.setVirtualHost(virtualHost);
             factory.setRequestedHeartbeat(heartBeat);
+            factory.setAutomaticRecoveryEnabled(automaticRecovery);
             if(ssl){
                 try {
                     factory.useSslProtocol();
-                } catch (KeyManagementException e) {
+                } catch (final KeyManagementException e) {
                     throw new RuntimeException(e);
-                } catch (NoSuchAlgorithmException e) {
+                } catch (final NoSuchAlgorithmException e) {
                     throw new RuntimeException(e);
                 }
             }
@@ -146,12 +156,13 @@ public class ConnectionConfig implements Serializable {
                     getFromMap("rabbitmq.password", stormConfig, ConnectionFactory.DEFAULT_PASS),
                     getFromMap("rabbitmq.virtualhost", stormConfig, ConnectionFactory.DEFAULT_VHOST),
                     getFromMapAsInt("rabbitmq.heartbeat", stormConfig, ConnectionFactory.DEFAULT_HEARTBEAT),
-                    getFromMapAsBoolean("rabbitmq.ssl", stormConfig, false));
+                    getFromMapAsBoolean("rabbitmq.ssl", stormConfig, false),
+                    getFromMapAsBoolean("rabbitmq.autoRecovery", stormConfig, false));
         }
     }
 
     public Map<String, Object> asMap() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        final Map<String, Object> map = new HashMap<String, Object>();
         if (uri != null) {
             addToMap("rabbitmq.uri", map, uri);
         } else {
