@@ -1,9 +1,11 @@
 package io.latent.storm.rabbitmq;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.storm.guava.cache.Cache;
 import org.apache.storm.guava.cache.CacheBuilder;
 import org.apache.storm.guava.cache.RemovalCause;
@@ -67,17 +69,19 @@ public class RabbitMQBatchSpout implements IBatchSpout {
 		_consumer.open();
 	}
 
+	private void rejectMessages(List<Message> messages) {
+		for (final Message message : messages) {
+			_consumer.failWithRedelivery(RabbitMQUtils.deliveryTagForMessage(message));
+		}
+	}
+
 	private Cache<Long, List<Message>> batchCache(Map conf) {
 		return CacheBuilder.newBuilder().expireAfterWrite(Utils.getInt(conf.get(Config.TOPOLOGY_MESSAGE_TIMEOUT_SECS)), TimeUnit.SECONDS)
 				.removalListener(new RemovalListener<Long, List<Message>>() {
 					@Override
 					public void onRemoval(RemovalNotification<Long, List<Message>> paramRemovalNotification) {
 						if (RemovalCause.EXPIRED.equals(paramRemovalNotification.getCause())) {
-							final List<Message> messages = paramRemovalNotification.getValue();
-							
-							for (final Message message : messages) {
-								_consumer.failWithRedelivery(RabbitMQUtils.deliveryTagForMessage(message));
-							}
+							rejectMessages(paramRemovalNotification.getValue());
 						}
 					}
 				}).maximumSize(Utils.getInt(conf.get(Config.TOPOLOGY_MAX_SPOUT_PENDING), DEFAULT_MAX_SIZE)).build();
@@ -85,9 +89,21 @@ public class RabbitMQBatchSpout implements IBatchSpout {
 
 	@Override
 	public void emitBatch(long batchId, TridentCollector collector) {
+		checkBatchReExecution(batchId);
+		storeBatchExecution(batchId, emitBatchMessages(collector));
+	}
 
+	private void storeBatchExecution(long batchId, final List<Message> currentBatch) {
+		if (currentBatch.isEmpty()) {
+			_emptyBatch.add(batchId);
+		}
+		else {
+			_inProgressBatches.put(batchId, currentBatch);
+		}
+	}
+
+	private List<Message> emitBatchMessages(TridentCollector collector) {
 		final List<Message> currentBatch = Lists.newArrayList();
-
 		for (int i = 0; i < maxBatchSize; i++) {
 			final Message message = _consumer.nextMessage();
 			if (!Message.NONE.equals(message)) {
@@ -95,26 +111,31 @@ public class RabbitMQBatchSpout implements IBatchSpout {
 				collector.emit(new Values(message.getBody(), RabbitMQUtils.headersForMessage(message)));
 			}
 		}
-		if (currentBatch.isEmpty()) {
-			_emptyBatch .add(batchId);
-		} else {
-			_inProgressBatches.put(batchId, currentBatch);
+		return currentBatch;
+	}
+
+	private void checkBatchReExecution(long batchId) {
+		final List<Message> batchMessages = inProgressBatchMessages(batchId);
+		if (!batchMessages.isEmpty()) {
+			rejectMessages(batchMessages);
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private List<Message> inProgressBatchMessages(long batchId) {
+		return (List<Message>) ObjectUtils.defaultIfNull(_inProgressBatches.getIfPresent(batchId), Collections.emptyList());
 	}
 
 	@Override
 	public void ack(long batchId) {
-		
-		if (isEmptyBatch(batchId)) {
-			return;
-		}
-		
-		final List<Message> ackBatch = _inProgressBatches.getIfPresent(batchId);
-		if (ackBatch == null) {
-			_LOGGER.warn(String.format("Cannot acknoledge batch %s", batchId));
-		}
-		else {
-			commitBatch(ackBatch);
+		if (!isEmptyBatch(batchId)) {
+			final List<Message> ackBatch = inProgressBatchMessages(batchId);
+			if (ackBatch == null) {
+				_LOGGER.warn(String.format("Cannot acknoledge batch %s", batchId));
+			}
+			else {
+				commitBatch(ackBatch);
+			}
 		}
 	}
 
