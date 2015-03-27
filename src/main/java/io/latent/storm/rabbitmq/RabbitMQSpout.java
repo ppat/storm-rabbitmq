@@ -14,6 +14,7 @@ import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
+import backtype.storm.utils.Utils;
 
 /**
  * A simple RabbitMQ spout that emits an anchored tuple stream (on the default stream). This can be used with
@@ -30,7 +31,8 @@ public class RabbitMQSpout extends BaseRichSpout {
   private transient SpoutOutputCollector collector;
 
   private boolean active;
-  private String streamId;
+  private final String streamId;
+  private int _nextTupleCallsWithoutMessage=0;
 
   public RabbitMQSpout(Scheme scheme) {
     this(MessageScheme.Builder.from(scheme), new Declarator.NoOp(),null);
@@ -98,16 +100,34 @@ public class RabbitMQSpout extends BaseRichSpout {
   @Override
   public void nextTuple() {
     if (!active) return;
-    Message message;
-    while ((message = consumer.nextMessage()) != Message.NONE) {
-      List<Object> tuple = extractTuple(message);
+    final Message message= consumer.nextMessage();
+    if (emptyMessage(message)) {
+    	Utils.sleep(waitTime());
+    } else {
+      final List<Object> tuple = extractTuple(message);
       if (!tuple.isEmpty()) {
         emit(tuple, message, collector);
       }
     }
   }
 
-  protected List<Integer> emit(List<Object> tuple,
+private boolean emptyMessage(final Message message) {
+	final boolean emptyMessage = message  == Message.NONE;
+	if (!emptyMessage) {
+		resetNextTupleCalls();
+	}
+	return emptyMessage;
+}
+
+private void resetNextTupleCalls() {
+	_nextTupleCallsWithoutMessage=0;
+}
+
+  private long waitTime() {
+	return 50*_nextTupleCallsWithoutMessage++;
+}
+
+protected List<Integer> emit(List<Object> tuple,
                                Message message,
                                SpoutOutputCollector spoutOutputCollector) {
     return streamId == null ? spoutOutputCollector.emit(tuple, getDeliveryTag(message)) : 
@@ -115,16 +135,16 @@ public class RabbitMQSpout extends BaseRichSpout {
   }
 
   private List<Object> extractTuple(Message message) {
-    long deliveryTag = getDeliveryTag(message);
+    final long deliveryTag = getDeliveryTag(message);
     try {
-      List<Object> tuple = scheme.deserialize(message);
+      final List<Object> tuple = scheme.deserialize(message);
       if (tuple != null && !tuple.isEmpty()) {
         return tuple;
       }
-      String errorMsg = "Deserialization error for msgId " + deliveryTag;
+      final String errorMsg = "Deserialization error for msgId " + deliveryTag;
       logger.warn(errorMsg);
       collector.reportError(new Exception(errorMsg));
-    } catch (Exception e) {
+    } catch (final Exception e) {
       logger.warn("Deserialization error for msgId " + deliveryTag, e);
       collector.reportError(e);
     }

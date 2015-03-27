@@ -2,6 +2,9 @@ package io.latent.storm.rabbitmq.config;
 
 import java.util.Map;
 
+import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang.StringUtils;
+
 public class ConfigUtils
 {
   public static String getFromMap(String key, Map<String, Object> map) {
@@ -9,7 +12,7 @@ public class ConfigUtils
   }
   
   public static String getFromMap(String key, Map<String, Object> map, String defaultValue) {
-    Object value = map.get(key);
+    final Object value = map.get(key);
     if (value==null) return defaultValue;
     return map.get(key).toString();
   }
@@ -19,17 +22,17 @@ public class ConfigUtils
   }
   
   public static int getFromMapAsInt(String key, Map<String, Object> map, int defaultValue) {
-    Object value = map.get(key);
+    final Object value = map.get(key);
     if (value==null) return defaultValue;
     return Integer.valueOf(map.get(key).toString());
   }
 
   public static boolean getFromMapAsBoolean(String key, Map<String, Object> map) {
-    return Boolean.valueOf(map.get(key).toString());
+    return Boolean.valueOf(ObjectUtils.defaultIfNull(map.get(key), StringUtils.EMPTY).toString());
   }
   
   public static boolean getFromMapAsBoolean(String key, Map<String, Object> map, boolean defaultValue) {
-    Object value = map.get(key);
+    final Object value = map.get(key);
     if (value==null) return defaultValue;
     return Boolean.valueOf(map.get(key).toString());
   }
