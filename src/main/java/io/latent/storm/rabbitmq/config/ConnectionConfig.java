@@ -29,6 +29,8 @@ public class ConnectionConfig implements Serializable {
     private String virtualHost;
     private int heartBeat;
     private boolean ssl;
+    // Backup hosts to try and connect to.
+    private ConfigAvailableHosts highAvailabilityHosts = new ConfigAvailableHosts();
 
     // Use AMQP URI http://www.rabbitmq.com/uri-spec.html
     private String uri;
@@ -61,16 +63,47 @@ public class ConnectionConfig implements Serializable {
                             int heartBeat) {
         this(host,port,username,password,virtualHost,heartBeat,false);
     }
-
+    
     public ConnectionConfig(String host, int port, String username, String password, String virtualHost, int heartBeat, boolean ssl) {
-        this.host = host;
-        this.port = port;
-        this.username = username;
-        this.password = password;
-        this.virtualHost = virtualHost;
-        this.heartBeat = heartBeat;
-        this.ssl = ssl;
+        this(new ConfigAvailableHosts(), host, port, username, password, virtualHost, heartBeat, ssl);
       }
+    
+    /**
+     * Use this constructor if you wish to specify a set of 
+     * hosts to connect to in the event that you need a high 
+     * availability RabbitMQ connection.
+     * 
+     * @param hosts The {@link ConfigAvailableHosts} that will give you the ability to specify a set of hosts
+     * @param username
+     * @param password
+     * @param virtualHost
+     * @param heartbeat
+     */
+    public ConnectionConfig(final ConfigAvailableHosts hosts, String host, int port, String username, String password, String virtualHost, int heartBeat, final boolean ssl) {
+      this.host = host;
+      this.port = port;
+      this.username = username;
+      this.password = password;
+      this.virtualHost = virtualHost;
+      this.heartBeat = heartBeat;
+      this.ssl = ssl;
+      this.highAvailabilityHosts = hosts;
+    }
+    
+    public ConfigAvailableHosts getHighAvailabilityHosts() {
+        return highAvailabilityHosts;
+    }
+    
+    /**
+     * Set this value if you want to use a set of high availability hosts
+     * in addition to the specified primary host you want to connect to,
+     * and didn't use the full constructor.
+     * 
+     * @param highAvailabilityHosts The host configuration for using backup hosts
+     */
+    public void setHighAvailabilityHosts(ConfigAvailableHosts highAvailabilityHosts) {
+        this.highAvailabilityHosts = highAvailabilityHosts;
+    }
     
     public String getHost() {
         return host;
@@ -140,13 +173,26 @@ public class ConnectionConfig implements Serializable {
         if (stormConfig.containsKey("rabbitmq.uri")) {
             return new ConnectionConfig(getFromMap("rabbitmq.uri", stormConfig));
         } else {
-            return new ConnectionConfig(getFromMap("rabbitmq.host", stormConfig, ConnectionFactory.DEFAULT_HOST),
+            String highAvailabilityHostsString = getFromMap("rabbitmq.ha.hosts", stormConfig);
+            if(highAvailabilityHostsString != null){
+                final ConfigAvailableHosts haHosts = ConfigAvailableHosts.fromString(highAvailabilityHostsString);
+                return new ConnectionConfig(haHosts,
+                    getFromMap("rabbitmq.host", stormConfig, ConnectionFactory.DEFAULT_HOST),
                     getFromMapAsInt("rabbitmq.port", stormConfig, ConnectionFactory.DEFAULT_AMQP_PORT),
                     getFromMap("rabbitmq.username", stormConfig, ConnectionFactory.DEFAULT_USER),
                     getFromMap("rabbitmq.password", stormConfig, ConnectionFactory.DEFAULT_PASS),
                     getFromMap("rabbitmq.virtualhost", stormConfig, ConnectionFactory.DEFAULT_VHOST),
                     getFromMapAsInt("rabbitmq.heartbeat", stormConfig, ConnectionFactory.DEFAULT_HEARTBEAT),
                     getFromMapAsBoolean("rabbitmq.ssl", stormConfig, false));
+            }else{
+              return new ConnectionConfig(getFromMap("rabbitmq.host", stormConfig, ConnectionFactory.DEFAULT_HOST),
+                    getFromMapAsInt("rabbitmq.port", stormConfig, ConnectionFactory.DEFAULT_AMQP_PORT),
+                    getFromMap("rabbitmq.username", stormConfig, ConnectionFactory.DEFAULT_USER),
+                    getFromMap("rabbitmq.password", stormConfig, ConnectionFactory.DEFAULT_PASS),
+                    getFromMap("rabbitmq.virtualhost", stormConfig, ConnectionFactory.DEFAULT_VHOST),
+                    getFromMapAsInt("rabbitmq.heartbeat", stormConfig, ConnectionFactory.DEFAULT_HEARTBEAT),
+                    getFromMapAsBoolean("rabbitmq.ssl", stormConfig, false));
+            }
         }
     }
 
@@ -162,6 +208,7 @@ public class ConnectionConfig implements Serializable {
             addToMap("rabbitmq.virtualhost", map, virtualHost);
             addToMap("rabbitmq.heartbeat", map, heartBeat);
             addToMap("rabbitmq.ssl", map, ssl);
+            addToMap("rabbitmq.ha.hosts", map, highAvailabilityHosts.toString());
         }
         return map;
     }

@@ -1,12 +1,21 @@
 package io.latent.storm.rabbitmq;
 
-import com.rabbitmq.client.*;
 import io.latent.storm.rabbitmq.config.ConnectionConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.rabbitmq.client.Address;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.ConsumerCancelledException;
+import com.rabbitmq.client.QueueingConsumer;
+import com.rabbitmq.client.ShutdownListener;
+import com.rabbitmq.client.ShutdownSignalException;
 
 /**
  * An abstraction on RabbitMQ client API to encapsulate interaction with RabbitMQ and de-couple Storm API from RabbitMQ API.
@@ -17,6 +26,7 @@ public class RabbitMQConsumer implements Serializable {
   public static final long MS_WAIT_FOR_MESSAGE = 1L;
 
   private final ConnectionFactory connectionFactory;
+  private final Address[] highAvailabilityHosts;
   private final int prefetchCount;
   private final String queueName;
   private final boolean requeueOnFail;
@@ -36,6 +46,7 @@ public class RabbitMQConsumer implements Serializable {
                           Declarator declarator,
                           ErrorReporter errorReporter) {
     this.connectionFactory = connectionConfig.asConnectionFactory();
+    this.highAvailabilityHosts = connectionConfig.getHighAvailabilityHosts().toAddresses();
     this.prefetchCount = prefetchCount;
     this.queueName = queueName;
     this.requeueOnFail = requeueOnFail;
@@ -174,7 +185,9 @@ public class RabbitMQConsumer implements Serializable {
   }
 
   private Connection createConnection() throws IOException {
-    Connection connection = connectionFactory.newConnection();
+    Connection connection = highAvailabilityHosts == null || highAvailabilityHosts.length == 0 
+          ? connectionFactory.newConnection() 
+          : connectionFactory.newConnection(highAvailabilityHosts);
     connection.addShutdownListener(new ShutdownListener() {
       @Override
       public void shutdownCompleted(ShutdownSignalException cause) {

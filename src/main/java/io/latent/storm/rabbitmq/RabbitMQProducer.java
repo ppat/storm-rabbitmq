@@ -1,15 +1,25 @@
 package io.latent.storm.rabbitmq;
 
-import backtype.storm.topology.ReportedFailedException;
-import com.rabbitmq.client.*;
 import io.latent.storm.rabbitmq.config.ConnectionConfig;
 import io.latent.storm.rabbitmq.config.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import backtype.storm.topology.ReportedFailedException;
+
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.AlreadyClosedException;
+import com.rabbitmq.client.BlockedListener;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.ShutdownListener;
+import com.rabbitmq.client.ShutdownSignalException;
 
 public class RabbitMQProducer implements Serializable {
   private final Declarator declarator;
@@ -122,7 +132,9 @@ public class RabbitMQProducer implements Serializable {
   }
 
   private Connection createConnection() throws IOException {
-    Connection connection = connectionConfig.asConnectionFactory().newConnection();
+    ConnectionFactory connectionFactory = connectionConfig.asConnectionFactory();
+    Connection connection = connectionConfig.getHighAvailabilityHosts().isEmpty() ? connectionFactory.newConnection()
+        : connectionFactory.newConnection(connectionConfig.getHighAvailabilityHosts().toAddresses());
     connection.addShutdownListener(new ShutdownListener() {
       @Override
       public void shutdownCompleted(ShutdownSignalException cause) {
