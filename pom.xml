@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.latent</groupId>
@@ -11,32 +12,37 @@
     <url>https://github.com/ppat/storm-rabbitmq</url>
     <inceptionYear>2013</inceptionYear>
     <licenses>
-      <license>
-        <name>The MIT License</name>
-        <url>http://www.opensource.org/licenses/mit-license.php</url>
-        <distribution>repo</distribution>
-      </license>
+        <license>
+            <name>The MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+            <distribution>repo</distribution>
+        </license>
     </licenses>
     <developers>
-      <developer>
-        <id>ppat</id>
-        <name>Peter Pathirana</name>
-        <email>peter@latent.io</email>
-      </developer>
-      <developer>
-        <id>SeanTAllen</id>
-        <name>Sean T Allen</name>
-        <email>sean@monkeysnatchbanana.com</email>
-      </developer>
-      <developer>
-        <id>philipsdoctor</id>
-        <name>Philip S Doctor</name>
-      </developer>
-      <developer>
-        <id>drazzib</id>
-        <name>Damien Raude-Morvan</name>
-        <email>drazzib@drazzib.com</email>
-      </developer>
+        <developer>
+            <id>ppat</id>
+            <name>Peter Pathirana</name>
+            <email>peter@latent.io</email>
+        </developer>
+        <developer>
+            <id>SeanTAllen</id>
+            <name>Sean T Allen</name>
+            <email>sean@monkeysnatchbanana.com</email>
+        </developer>
+        <developer>
+            <id>philipsdoctor</id>
+            <name>Philip S Doctor</name>
+        </developer>
+        <developer>
+            <id>drazzib</id>
+            <name>Damien Raude-Morvan</name>
+            <email>drazzib@drazzib.com</email>
+        </developer>
+        <developer>
+            <id>bdgould</id>
+            <name>Ben Gould</name>
+            <email>bdgould@smcm.edu</email>
+        </developer>
     </developers>
 
     <!-- Include OSS Nexus configuration which will add :
@@ -56,46 +62,38 @@
         <tag>HEAD</tag>
     </scm>
 
-    <repositories>
-        <repository>
-            <id>clojars.org</id>
-            <url>http://clojars.org/repo</url>
-        </repository>
-    </repositories>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jdk.version>1.6</jdk.version>
-        <slf4j.version>1.6.6</slf4j.version>
     </properties>
 
     <build>
 
-    <!-- Override some plugin versions from parent pom -->
-    <pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.5</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.5</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
-            </plugin>
-        </plugins>
-    </pluginManagement>
+        <!-- Override some plugin versions from parent pom -->
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.2.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.9.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
 
         <plugins>
             <plugin>
@@ -123,21 +121,21 @@
     </build>
 
     <dependencies>
-       <dependency>
+        <dependency>
             <groupId>org.apache.storm</groupId>
             <artifactId>storm-core</artifactId>
-            <version>0.9.3</version>
+            <version>0.9.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
-            <version>3.4.2</version>
+            <version>3.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
+            <version>1.7.5</version>
         </dependency>
     </dependencies>
 
