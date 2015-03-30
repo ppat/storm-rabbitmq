@@ -28,6 +28,7 @@ public class RabbitMQSpout extends BaseRichSpout {
   private transient Logger logger;
   private transient RabbitMQConsumer consumer;
   private transient SpoutOutputCollector collector;
+  private transient int prefetchCount;
 
   private boolean active;
   private String streamId;
@@ -72,6 +73,7 @@ public class RabbitMQSpout extends BaseRichSpout {
     consumer = loadConsumer(declarator, reporter, consumerConfig);
     scheme.open(config, context);
     consumer.open();
+    prefetchCount = consumerConfig.getPrefetchCount();
     logger = LoggerFactory.getLogger(RabbitMQSpout.class);
     collector = spoutOutputCollector;
     active = true;
@@ -98,11 +100,13 @@ public class RabbitMQSpout extends BaseRichSpout {
   @Override
   public void nextTuple() {
     if (!active) return;
+    int emitted = 0;
     Message message;
-    while ((message = consumer.nextMessage()) != Message.NONE) {
+    while (emitted < prefetchCount && (message = consumer.nextMessage()) != Message.NONE) {
       List<Object> tuple = extractTuple(message);
       if (!tuple.isEmpty()) {
         emit(tuple, message, collector);
+        emitted += 1;
       }
     }
   }
