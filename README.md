@@ -257,3 +257,8 @@ builder.setBolt("rabbitmq-sink", new RabbitMQBolt(scheme))
        .addConfigurations(sinkConfig)
        .shuffleGrouping("previous-bolt")
 ```
+
+## RabbitMQ connection management
+The Rabbit connections are made persistent and hence for a large real time process computing with varying load pattern will not cause more retries. 
+
+Note:The connections needs to have heartbeat configured so that the connection is made persistent
