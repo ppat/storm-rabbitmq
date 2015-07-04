@@ -10,155 +10,90 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import pns.alltypes.rabbitmq.RabbitConnectionConfig;
+import pns.alltypes.rabbitmq.RabbitMQConnectionManager;
+import pns.alltypes.rabbitmq.RabbitMQConnectionManager.AmqpChannel;
 import backtype.storm.topology.ReportedFailedException;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.AlreadyClosedException;
-import com.rabbitmq.client.BlockedListener;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.ShutdownListener;
-import com.rabbitmq.client.ShutdownSignalException;
 
 public class RabbitMQProducer implements Serializable {
-  private final Declarator declarator;
+    private final Declarator declarator;
 
-  private transient Logger logger;
+    private static RabbitMQConnectionManager RABBIT_MQ_CONNECTION_MANAGER;
+    private transient Logger logger;
 
-  private transient ConnectionConfig connectionConfig;
-  private transient Connection connection;
-  private transient Channel channel;
+    private transient ConnectionConfig connectionConfig;
+    private transient Channel channel;
 
-  private boolean blocked = false;
-
-  public RabbitMQProducer()
-  {
-    this(new Declarator.NoOp());
-  }
-
-  public RabbitMQProducer(Declarator declarator) {
-    this.declarator = declarator;
-  }
-
-  public void send(Message message) {
-    if (message == Message.NONE) return;
-    sendMessageWhenNotBlocked((Message.MessageForSending) message);
-  }
-
-  private void sendMessageWhenNotBlocked(Message.MessageForSending message) {
-    while (true) {
-      if (blocked) {
-        try { Thread.sleep(100); } catch (InterruptedException ie) { }
-      } else {
-        sendMessageActual(message);
-        return;
-      }
+    public RabbitMQProducer() {
+        this(new Declarator.NoOp());
     }
-  }
 
-  private void sendMessageActual(Message.MessageForSending message) {
-
-    reinitIfNecessary();
-    if (channel == null) throw new ReportedFailedException("No connection to RabbitMQ");
-    try {
-      AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
-                                                                .contentType(message.getContentType())
-                                                                .contentEncoding(message.getContentEncoding())
-                                                                .deliveryMode((message.isPersistent()) ? 2 : 1)
-                                                                .headers(message.getHeaders())
-                                                                .build();
-      channel.basicPublish(message.getExchangeName(), message.getRoutingKey(), properties, message.getBody());
-    } catch (AlreadyClosedException ace) {
-      logger.error("already closed exception while attempting to send message", ace);
-      reset();
-      throw new ReportedFailedException(ace);
-    } catch (IOException ioe) {
-      logger.error("io exception while attempting to send message", ioe);
-      reset();
-      throw new ReportedFailedException(ioe);
-    } catch (Exception e) {
-      logger.warn("Unexpected error while sending message. Backing off for a bit before trying again (to allow time for recovery)", e);
-      try { Thread.sleep(1000); } catch (InterruptedException ie) { }
+    public RabbitMQProducer(final Declarator declarator) {
+        this.declarator = declarator;
     }
-  }
 
-  public void open(final Map config) {
-    logger = LoggerFactory.getLogger(RabbitMQProducer.class);
-    connectionConfig = ProducerConfig.getFromStormConfig(config).getConnectionConfig();
-    internalOpen();
-  }
-
-  private void internalOpen() {
-    try {
-      connection = createConnection();
-      channel = connection.createChannel();
-
-      // run any declaration prior to message sending
-      declarator.execute(channel);
-    } catch (Exception e) {
-      logger.error("could not open connection on rabbitmq", e);
-      reset();
+    public void send(final Message message) {
+        if (message == Message.NONE) {
+            return;
+        }
+        sendMessageActual((Message.MessageForSending) message);
     }
-  }
 
-  public void close() {
-    try {
-      if (channel != null && channel.isOpen()) {
-        channel.close();
-      }
-    } catch (Exception e) {
-      logger.debug("error closing channel", e);
+    private void sendMessageActual(final Message.MessageForSending message) {
+
+        // wait until channel is avaialable
+
+        try {
+            final AmqpChannel localChannel = RabbitMQProducer.RABBIT_MQ_CONNECTION_MANAGER.getChannel();
+            channel = localChannel.getChannel();
+            final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder().contentType(message.getContentType())
+                    .contentEncoding(message.getContentEncoding()).deliveryMode(message.isPersistent() ? 2 : 1).headers(message.getHeaders()).build();
+            channel.basicPublish(message.getExchangeName(), message.getRoutingKey(), properties, message.getBody());
+        } catch (final AlreadyClosedException ace) {
+            logger.error("already closed exception while attempting to send message", ace);
+            throw new ReportedFailedException(ace);
+        } catch (final IOException ioe) {
+            logger.error("io exception while attempting to send message", ioe);
+            throw new ReportedFailedException(ioe);
+        } catch (final Exception e) {
+            logger.warn("Unexpected error while sending message. Backing off for a bit before trying again (to allow time for recovery)", e);
+            try {
+                Thread.sleep(1000);
+            } catch (final InterruptedException ie) {
+            }
+        } finally {
+
+        }
     }
-    try {
-      logger.info("closing connection to rabbitmq: " + connection);
-      connection.close();
-    } catch (Exception e) {
-      logger.debug("error closing connection", e);
+
+    public void open(final Map config) {
+        logger = LoggerFactory.getLogger(RabbitMQProducer.class);
+        connectionConfig = ProducerConfig.getFromStormConfig(config).getConnectionConfig();
+        internalOpen();
     }
-    channel = null;
-    connection = null;
-  }
 
-  private void reset() {
-    channel = null;
-  }
+    private void internalOpen() {
+        try {
+            RabbitMQProducer.RABBIT_MQ_CONNECTION_MANAGER = RabbitMQConnectionManager.getInstance(new RabbitConnectionConfig(connectionConfig
+                    .asConnectionFactory(), connectionConfig.getHighAvailabilityHosts() == null ? null : connectionConfig.getHighAvailabilityHosts()
+                            .toAddresses()));
+            RabbitMQProducer.RABBIT_MQ_CONNECTION_MANAGER.addConnection();// give a hint on no of conn
+            RabbitMQProducer.RABBIT_MQ_CONNECTION_MANAGER.addChannel();// give a hint on no of channels
 
-  private void reinitIfNecessary() {
-    if (channel == null) {
-      close();
-      internalOpen();
+            // run any declaration prior to message sending
+            declarator.execute(channel);
+        } catch (final Exception e) {
+            logger.error("could not open connection on rabbitmq", e);
+
+        }
     }
-  }
 
-  private Connection createConnection() throws IOException {
-    ConnectionFactory connectionFactory = connectionConfig.asConnectionFactory();
-    Connection connection = connectionConfig.getHighAvailabilityHosts().isEmpty() ? connectionFactory.newConnection()
-        : connectionFactory.newConnection(connectionConfig.getHighAvailabilityHosts().toAddresses());
-    connection.addShutdownListener(new ShutdownListener() {
-      @Override
-      public void shutdownCompleted(ShutdownSignalException cause) {
-        logger.error("shutdown signal received", cause);
-        reset();
-      }
-    });
-    connection.addBlockedListener(new BlockedListener()
-    {
-      @Override
-      public void handleBlocked(String reason) throws IOException
-      {
-        blocked = true;
-        logger.warn(String.format("Got blocked by rabbitmq with reason = %s", reason));
-      }
+    public void close() {
+        // shutdown of rmq done on exit of VM.
+    }
 
-      @Override
-      public void handleUnblocked() throws IOException
-      {
-        blocked = false;
-        logger.warn(String.format("Got unblocked by rabbitmq"));
-      }
-    });
-    logger.info("connected to rabbitmq: " + connection);
-    return connection;
-  }
 }
