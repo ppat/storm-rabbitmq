@@ -1,3 +1,38 @@
-target/
+*target*
+*.jar
+*.war
+*.ear
+*.class
+/*.jar
+*.log
+/build
+/lib
+/out
+/output*
+ch*/maxwidget
+snippet/actual
+logs
+bin
+target
+/target
+.classpath
+.project
+.metadata
+bin/**
+logs/**
+tmp/**
+tmp/**/*
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.classpath
+.settings/
+.loadpath
 
-*.iml
+# External tool builders
+.externalToolBuilders/
+
+# Locally stored "Eclipse launch configurations"
+*.launch
