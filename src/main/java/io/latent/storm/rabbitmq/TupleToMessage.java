@@ -27,7 +27,7 @@ public abstract class TupleToMessage implements Serializable {
   protected Message produceMessage(Tuple input) {
     return Message.forSending(
         extractBody(input),
-        specifiyHeaders(input),
+        specifyHeaders(input),
         determineExchangeName(input),
         determineRoutingKey(input),
         specifyContentType(input),
@@ -74,7 +74,7 @@ public abstract class TupleToMessage implements Serializable {
    * @param input the incoming tuple
    * @return the headers as a map
    */
-  protected Map<String, Object> specifiyHeaders(Tuple input)
+  protected Map<String, Object> specifyHeaders(Tuple input)
   {
     return new HashMap<String, Object>();
   }

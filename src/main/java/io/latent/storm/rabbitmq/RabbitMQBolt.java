@@ -44,7 +44,7 @@ public class RabbitMQBolt extends BaseRichBolt {
   public void prepare(@SuppressWarnings("rawtypes") final Map stormConf, final TopologyContext context, final OutputCollector collector) {
     producer = new RabbitMQProducer(declarator);
     producer.open(stormConf);
-    logger = LoggerFactory.getLogger(RabbitMQProducer.class);
+    logger = LoggerFactory.getLogger(this.getClass());
     this.collector = collector;
     this.scheme.prepare(stormConf);
     logger.info("Successfully prepared RabbitMQBolt");
@@ -52,13 +52,21 @@ public class RabbitMQBolt extends BaseRichBolt {
 
   @Override
   public void execute(final Tuple tuple) {
-    producer.send(scheme.produceMessage(tuple));
-    // tuples are always acked, even when transformation by scheme yields Message.NONE as
+      publish(tuple);
+      // tuples are always acked, even when transformation by scheme yields Message.NONE as
     // if it failed once it's unlikely to succeed when re-attempted (i.e. serialization/deserilization errors).
-    collector.ack(tuple);
+      acknowledge(tuple);
   }
 
-  @Override
+    protected void acknowledge(Tuple tuple) {
+        collector.ack(tuple);
+    }
+
+    protected void publish(Tuple tuple) {
+        producer.send(scheme.produceMessage(tuple));
+    }
+
+    @Override
   public void declareOutputFields(final OutputFieldsDeclarer declarer) {
     //No fields are emitted from this drain.
   }
