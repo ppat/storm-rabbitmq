@@ -6,6 +6,8 @@ import backtype.storm.tuple.Fields;
 import java.util.*;
 
 import backtype.storm.task.TopologyContext;
+import com.rabbitmq.client.LongString;
+
 import java.io.Serializable;
 
 
@@ -91,6 +93,8 @@ public class RabbitMQMessageScheme implements MessageScheme {
           entry.getValue() instanceof String ||
           entry.getValue() instanceof Date) {
         serializableHeaders.put(entry.getKey(), entry.getValue());
+      }else if(entry.getValue() instanceof LongString){
+          serializableHeaders.put(entry.getKey(), entry.getValue().toString());
       }
     }
     return serializableHeaders;
@@ -102,7 +106,7 @@ public class RabbitMQMessageScheme implements MessageScheme {
     private final String exchange;
     private final String routingKey;
 
-    Envelope(boolean isRedelivery, long deliveryTag, String exchange, String routingKey) {
+    public Envelope(boolean isRedelivery, long deliveryTag, String exchange, String routingKey) {
       this.isRedelivery = isRedelivery;
       this.deliveryTag = deliveryTag;
       this.exchange = exchange;
