@@ -72,7 +72,7 @@ public class RabbitMQMessageScheme implements MessageScheme {
             dm.getCorrelationId(),
             dm.getDeliveryMode(),
             dm.getExpiration(),
-            serialiazableHeaders(dm.getHeaders()),
+            serializableHeaders(dm.getHeaders()),
             dm.getMessageId(),
             dm.getPriority(),
             dm.getReplyTo(),
@@ -81,24 +81,33 @@ public class RabbitMQMessageScheme implements MessageScheme {
             dm.getUserId());
   }
 
-  private Map<String, Object> serialiazableHeaders(Map<String, Object> headers) {
-    if (headers == null) {
-      return new HashMap<String, Object>();
+    private Map<String, Object> serializableHeaders(Map<String, Object> headers) {
+        if (headers == null) {
+            return new HashMap<String, Object>();
+        }
+
+        Map<String, Object> headersSerializable = new HashMap<String, Object>(headers.size());
+        for (Map.Entry<String, Object> entry : headers.entrySet()) {
+            if (entry.getValue() instanceof Number ||
+                    entry.getValue() instanceof Boolean ||
+                    entry.getValue() instanceof Character ||
+                    entry.getValue() instanceof String ||
+                    entry.getValue() instanceof Date) {
+                headersSerializable.put(entry.getKey(), entry.getValue());
+            } else if (entry.getValue() instanceof LongString) {
+                headersSerializable.put(entry.getKey(), entry.getValue().toString());
+            } else if (entry.getValue() instanceof ArrayList) {
+                ArrayList serializedList = new ArrayList();
+                for (Object elm : ((ArrayList) entry.getValue())) {
+                    if (elm instanceof HashMap) {
+                        serializedList.add(serializableHeaders((HashMap<String, Object>) elm));
+                    }
+                }
+                headersSerializable.put(entry.getKey(), serializedList);
+            }
+        }
+        return headersSerializable;
     }
-    Map<String, Object> serializableHeaders = new HashMap<String, Object>(headers.size());
-    for (Map.Entry<String, Object> entry : headers.entrySet()) {
-      if (entry.getValue() instanceof Number ||
-          entry.getValue() instanceof Boolean ||
-          entry.getValue() instanceof Character ||
-          entry.getValue() instanceof String ||
-          entry.getValue() instanceof Date) {
-        serializableHeaders.put(entry.getKey(), entry.getValue());
-      }else if(entry.getValue() instanceof LongString){
-          serializableHeaders.put(entry.getKey(), entry.getValue().toString());
-      }
-    }
-    return serializableHeaders;
-  }
 
   public static class Envelope implements Serializable {
     private final boolean isRedelivery;
