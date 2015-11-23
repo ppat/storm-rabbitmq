@@ -55,7 +55,7 @@ public class Message {
     private final String type;
     private final String userId;
 
-    private DeliveredMessage(QueueingConsumer.Delivery delivery) {
+    public DeliveredMessage(QueueingConsumer.Delivery delivery) {
       super(delivery.getBody());
       redelivery = delivery.getEnvelope().isRedeliver();
       deliveryTag = delivery.getEnvelope().getDeliveryTag();
