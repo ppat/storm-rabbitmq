@@ -1,15 +1,14 @@
 package io.latent.storm.rabbitmq.config;
 
-import static io.latent.storm.rabbitmq.config.ConfigUtils.addToMap;
-import static io.latent.storm.rabbitmq.config.ConfigUtils.getFromMap;
-import static io.latent.storm.rabbitmq.config.ConfigUtils.getFromMapAsBoolean;
-import static io.latent.storm.rabbitmq.config.ConfigUtils.getFromMapAsInt;
+import com.rabbitmq.client.ConnectionFactory;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
@@ -21,7 +20,10 @@ import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.rabbitmq.client.ConnectionFactory;
+import static io.latent.storm.rabbitmq.config.ConfigUtils.addToMap;
+import static io.latent.storm.rabbitmq.config.ConfigUtils.getFromMap;
+import static io.latent.storm.rabbitmq.config.ConfigUtils.getFromMapAsBoolean;
+import static io.latent.storm.rabbitmq.config.ConfigUtils.getFromMapAsInt;
 
 public class ConnectionConfig implements Serializable {
 
@@ -259,7 +261,7 @@ public class ConnectionConfig implements Serializable {
                     KeyStore ks;
                     KeyManagerFactory kmf = KeyManagerFactory.getInstance(certType);
 
-                    FileInputStream ksIn = new FileInputStream(keystorePath);
+                    InputStream ksIn = getResource(keystorePath);
                     try {
                         keyPassphrase = keystorePassword.toCharArray();
                         ks = KeyStore.getInstance(keystoreType);
@@ -273,13 +275,11 @@ public class ConnectionConfig implements Serializable {
                         }
                     }
                     TrustManagerFactory tmf = TrustManagerFactory.getInstance(certType);
-                    FileInputStream tksIn = new FileInputStream(truststorePath);
-
+                    InputStream tksIn = getResource(this.truststorePath);
                     try {
                         char[] trustPassphrase = truststorePassword.toCharArray();
                         KeyStore tks = KeyStore.getInstance(truststoreType);
                         tks.load(tksIn, trustPassphrase);
-
                         tmf.init(tks);
                     } finally {
                         try {
@@ -314,6 +314,18 @@ public class ConnectionConfig implements Serializable {
                 } catch (KeyManagementException e) {
                     throw new RuntimeException(e);
                 }
+            }
+        }
+
+        private InputStream getResource(String resourcePath) throws FileNotFoundException {
+            try {
+                return new FileInputStream(resourcePath);
+            } catch (FileNotFoundException e) {
+                InputStream in = this.getClass().getResourceAsStream(resourcePath);
+                if (in == null) {
+                    throw new FileNotFoundException(resourcePath);
+                }
+                return in;
             }
         }
     }
