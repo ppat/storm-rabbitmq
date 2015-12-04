@@ -3,13 +3,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.latent</groupId>
+    <groupId>ru.kiryam</groupId>
     <artifactId>storm-rabbitmq</artifactId>
-    <version>0.6.2-SNAPSHOT</version>
+    <version>0.6.2</version>
     <packaging>jar</packaging>
     <name>storm-rabbitmq</name>
     <description>A library of tools for interacting with RabbitMQ from Storm.</description>
-    <url>https://github.com/ppat/storm-rabbitmq</url>
+    <url>https://github.com/kiryam/storm-rabbitmq</url>
     <inceptionYear>2013</inceptionYear>
     <licenses>
         <license>
@@ -43,6 +43,11 @@
             <name>Ben Gould</name>
             <email>bdgould@smcm.edu</email>
         </developer>
+        <developer>
+            <id>kiryam</id>
+            <name>PIvannikov Kirill</name>
+            <email>kiryam@kiryam.ru</email>
+        </developer>
     </developers>
 
     <!-- Include OSS Nexus configuration which will add :
@@ -56,9 +61,9 @@
     </parent>
 
     <scm>
-        <connection>scm:git:git@github.com:ppat/storm-rabbitmq.git</connection>
-        <developerConnection>scm:git:git@github.com:ppat/storm-rabbitmq.git</developerConnection>
-        <url>git@github.com:ppat/storm-rabbitmq.git</url>
+        <connection>scm:git:git@github.com:kiryam/storm-rabbitmq.git</connection>
+        <developerConnection>scm:git:git@github.com:kiryam/storm-rabbitmq.git</developerConnection>
+        <url>git@github.com:kiryam/storm-rabbitmq.git</url>
         <tag>HEAD</tag>
     </scm>
 
