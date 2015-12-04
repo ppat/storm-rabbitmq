@@ -118,7 +118,7 @@ builder.setBolt("retry-failures-with-longer-timeout", new SlowBolt(),  20) // sl
 
 ## Declarator
 
-By default, these spouts assume that the queue in question already exists in RabbitMQ. If you want the queue declaration to also happen on the spout, you need to provide an implementation of ```io.latent.storm.rabbitmq.Declarator```. Declarator (and therefore storm-rabbitmq) is unopinionated about how the queue this spout will listen on should be wired to exchange(s) and you are free to choose any form of wiring that serves your use case.
+By default, these spouts assume that the queue in question already exists in RabbitMQ. If you want the queue declaration to also happen on the spout, you need to provide an implementation of ```Declarator```. Declarator (and therefore storm-rabbitmq) is unopinionated about how the queue this spout will listen on should be wired to exchange(s) and you are free to choose any form of wiring that serves your use case.
 
 ```java
 public class CustomStormDeclarator implements Declarator {
