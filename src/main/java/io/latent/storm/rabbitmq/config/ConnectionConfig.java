@@ -183,15 +183,19 @@ public class ConnectionConfig implements Serializable {
             String highAvailabilityHostsString = getFromMap("rabbitmq.ha.hosts", stormConfig);
             if(highAvailabilityHostsString != null){
                 final ConfigAvailableHosts haHosts = ConfigAvailableHosts.fromString(highAvailabilityHostsString);
-                return new ConnectionConfig(haHosts,
-                    getFromMap("rabbitmq.host", stormConfig, ConnectionFactory.DEFAULT_HOST),
-                    getFromMapAsInt("rabbitmq.port", stormConfig, ConnectionFactory.DEFAULT_AMQP_PORT),
-                    getFromMap("rabbitmq.username", stormConfig, ConnectionFactory.DEFAULT_USER),
-                    getFromMap("rabbitmq.password", stormConfig, ConnectionFactory.DEFAULT_PASS),
-                    getFromMap("rabbitmq.virtualhost", stormConfig, ConnectionFactory.DEFAULT_VHOST),
-                    getFromMapAsInt("rabbitmq.heartbeat", stormConfig, ConnectionFactory.DEFAULT_HEARTBEAT),
-                    getFromMapAsBoolean("rabbitmq.ssl", stormConfig, false));
-            }else{
+                final ConnectionConfig connConfig = new ConnectionConfig(haHosts,
+                        getFromMap("rabbitmq.host", stormConfig, ConnectionFactory.DEFAULT_HOST),
+                        getFromMapAsInt("rabbitmq.port", stormConfig, ConnectionFactory.DEFAULT_AMQP_PORT),
+                        getFromMap("rabbitmq.username", stormConfig, ConnectionFactory.DEFAULT_USER),
+                        getFromMap("rabbitmq.password", stormConfig, ConnectionFactory.DEFAULT_PASS),
+                        getFromMap("rabbitmq.virtualhost", stormConfig, ConnectionFactory.DEFAULT_VHOST),
+                        getFromMapAsInt("rabbitmq.heartbeat", stormConfig, ConnectionFactory.DEFAULT_HEARTBEAT),
+                        getFromMapAsBoolean("rabbitmq.ssl", stormConfig, false));
+                if (connConfig.isSsl()) {
+                    connConfig.setSslConnectionConfig(new SslConnectionConfig(stormConfig));
+                }
+                return connConfig;
+            } else {
                 ConnectionConfig connConfig = new ConnectionConfig(getFromMap("rabbitmq.host", stormConfig, ConnectionFactory.DEFAULT_HOST),
                     getFromMapAsInt("rabbitmq.port", stormConfig, ConnectionFactory.DEFAULT_AMQP_PORT),
                     getFromMap("rabbitmq.username", stormConfig, ConnectionFactory.DEFAULT_USER),
@@ -306,7 +310,7 @@ public class ConnectionConfig implements Serializable {
                     throw new RuntimeException(e);
                 }
             } else {
-                // non verifying
+                // use default jdk truststore
                 try {
                     factory.useSslProtocol();
                 } catch (NoSuchAlgorithmException e) {
