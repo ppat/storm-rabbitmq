@@ -5,7 +5,9 @@ import java.util.Map;
 public class ConfigUtils
 {
   public static String getFromMap(String key, Map<String, Object> map) {
-    return map.get(key).toString();
+    Object value = map.get(key);
+    if (value == null) return null;
+    return value.toString();
   }
   
   public static String getFromMap(String key, Map<String, Object> map, String defaultValue) {

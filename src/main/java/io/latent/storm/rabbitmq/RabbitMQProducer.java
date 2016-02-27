@@ -56,6 +56,7 @@ public class RabbitMQProducer implements Serializable {
                                                                 .contentEncoding(message.getContentEncoding())
                                                                 .deliveryMode((message.isPersistent()) ? 2 : 1)
                                                                 .headers(message.getHeaders())
+                                                                .expiration(message.getExpiration())
                                                                 .build();
       channel.basicPublish(message.getExchangeName(), message.getRoutingKey(), properties, message.getBody());
     } catch (AlreadyClosedException ace) {

@@ -1,18 +1,29 @@
 package io.latent.storm.rabbitmq.config;
 
+import com.rabbitmq.client.ConnectionFactory;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.util.HashMap;
+import java.util.Map;
+
 import static io.latent.storm.rabbitmq.config.ConfigUtils.addToMap;
 import static io.latent.storm.rabbitmq.config.ConfigUtils.getFromMap;
 import static io.latent.storm.rabbitmq.config.ConfigUtils.getFromMapAsBoolean;
 import static io.latent.storm.rabbitmq.config.ConfigUtils.getFromMapAsInt;
-
-import java.io.Serializable;
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
-
-import com.rabbitmq.client.ConnectionFactory;
 
 public class ConnectionConfig implements Serializable {
 
@@ -29,6 +40,8 @@ public class ConnectionConfig implements Serializable {
     private String virtualHost;
     private int heartBeat;
     private boolean ssl;
+    private SslConnectionConfig sslConnectionConfig;
+
     // Backup hosts to try and connect to.
     private ConfigAvailableHosts highAvailabilityHosts = new ConfigAvailableHosts();
 
@@ -157,13 +170,7 @@ public class ConnectionConfig implements Serializable {
             factory.setVirtualHost(virtualHost);
             factory.setRequestedHeartbeat(heartBeat);
             if(ssl){
-                try {
-                    factory.useSslProtocol();
-                } catch (KeyManagementException e) {
-                    throw new RuntimeException(e);
-                } catch (NoSuchAlgorithmException e) {
-                    throw new RuntimeException(e);
-                }
+                this.sslConnectionConfig.configureSsl(factory);
             }
         }
         return factory;
@@ -176,22 +183,30 @@ public class ConnectionConfig implements Serializable {
             String highAvailabilityHostsString = getFromMap("rabbitmq.ha.hosts", stormConfig);
             if(highAvailabilityHostsString != null){
                 final ConfigAvailableHosts haHosts = ConfigAvailableHosts.fromString(highAvailabilityHostsString);
-                return new ConnectionConfig(haHosts,
-                    getFromMap("rabbitmq.host", stormConfig, ConnectionFactory.DEFAULT_HOST),
+                final ConnectionConfig connConfig = new ConnectionConfig(haHosts,
+                        getFromMap("rabbitmq.host", stormConfig, ConnectionFactory.DEFAULT_HOST),
+                        getFromMapAsInt("rabbitmq.port", stormConfig, ConnectionFactory.DEFAULT_AMQP_PORT),
+                        getFromMap("rabbitmq.username", stormConfig, ConnectionFactory.DEFAULT_USER),
+                        getFromMap("rabbitmq.password", stormConfig, ConnectionFactory.DEFAULT_PASS),
+                        getFromMap("rabbitmq.virtualhost", stormConfig, ConnectionFactory.DEFAULT_VHOST),
+                        getFromMapAsInt("rabbitmq.heartbeat", stormConfig, ConnectionFactory.DEFAULT_HEARTBEAT),
+                        getFromMapAsBoolean("rabbitmq.ssl", stormConfig, false));
+                if (connConfig.isSsl()) {
+                    connConfig.setSslConnectionConfig(new SslConnectionConfig(stormConfig));
+                }
+                return connConfig;
+            } else {
+                ConnectionConfig connConfig = new ConnectionConfig(getFromMap("rabbitmq.host", stormConfig, ConnectionFactory.DEFAULT_HOST),
                     getFromMapAsInt("rabbitmq.port", stormConfig, ConnectionFactory.DEFAULT_AMQP_PORT),
                     getFromMap("rabbitmq.username", stormConfig, ConnectionFactory.DEFAULT_USER),
                     getFromMap("rabbitmq.password", stormConfig, ConnectionFactory.DEFAULT_PASS),
                     getFromMap("rabbitmq.virtualhost", stormConfig, ConnectionFactory.DEFAULT_VHOST),
                     getFromMapAsInt("rabbitmq.heartbeat", stormConfig, ConnectionFactory.DEFAULT_HEARTBEAT),
                     getFromMapAsBoolean("rabbitmq.ssl", stormConfig, false));
-            }else{
-              return new ConnectionConfig(getFromMap("rabbitmq.host", stormConfig, ConnectionFactory.DEFAULT_HOST),
-                    getFromMapAsInt("rabbitmq.port", stormConfig, ConnectionFactory.DEFAULT_AMQP_PORT),
-                    getFromMap("rabbitmq.username", stormConfig, ConnectionFactory.DEFAULT_USER),
-                    getFromMap("rabbitmq.password", stormConfig, ConnectionFactory.DEFAULT_PASS),
-                    getFromMap("rabbitmq.virtualhost", stormConfig, ConnectionFactory.DEFAULT_VHOST),
-                    getFromMapAsInt("rabbitmq.heartbeat", stormConfig, ConnectionFactory.DEFAULT_HEARTBEAT),
-                    getFromMapAsBoolean("rabbitmq.ssl", stormConfig, false));
+                if (connConfig.isSsl()) {
+                    connConfig.setSslConnectionConfig(new SslConnectionConfig(stormConfig));
+                }
+                return connConfig;
             }
         }
     }
@@ -211,5 +226,111 @@ public class ConnectionConfig implements Serializable {
             addToMap("rabbitmq.ha.hosts", map, highAvailabilityHosts.toString());
         }
         return map;
+    }
+
+    private void setSslConnectionConfig(SslConnectionConfig sslConnectionConfig) {
+        this.sslConnectionConfig = sslConnectionConfig;
+    }
+
+    private static class SslConnectionConfig {
+        String certType;
+        String sslVersion;
+        String keystorePath;
+        String keystorePassword;
+        String keystoreType;
+        String truststorePath;
+        String truststorePassword;
+        String truststoreType;
+
+        SslConnectionConfig(Map<String, Object> config) {
+            certType = getFromMap("rabbitmq.certType", config, "SunX509");
+            sslVersion = getFromMap("rabbitmq.sslVersion", config, "TLSv1.2");
+            keystorePath = getFromMap("rabbitmq.keystorePath", config);
+            keystorePassword = getFromMap("rabbitmq.keystorePassword", config);
+            keystoreType = getFromMap("rabbitmq.keystoreType", config, "PKCS12");
+            truststorePath = getFromMap("rabbitmq.truststorePath", config);
+            truststorePassword = getFromMap("rabbitmq.truststorePassword", config);
+            truststoreType = getFromMap("rabbitmq.truststoreType", config, "PKS");
+        }
+
+        private boolean isConfigured() {
+            return keystorePath != null && keystorePassword != null && truststorePath != null &&
+                    truststorePassword != null;
+        }
+
+        public void configureSsl(ConnectionFactory factory) {
+            if (this.isConfigured()) {
+                try {
+                    char[] keyPassphrase;
+                    KeyStore ks;
+                    KeyManagerFactory kmf = KeyManagerFactory.getInstance(certType);
+
+                    InputStream ksIn = getResource(keystorePath);
+                    try {
+                        keyPassphrase = keystorePassword.toCharArray();
+                        ks = KeyStore.getInstance(keystoreType);
+                        ks.load(ksIn, keyPassphrase);
+                        kmf.init(ks, keyPassphrase);
+                    } finally {
+                        try {
+                            ksIn.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    TrustManagerFactory tmf = TrustManagerFactory.getInstance(certType);
+                    InputStream tksIn = getResource(this.truststorePath);
+                    try {
+                        char[] trustPassphrase = truststorePassword.toCharArray();
+                        KeyStore tks = KeyStore.getInstance(truststoreType);
+                        tks.load(tksIn, trustPassphrase);
+                        tmf.init(tks);
+                    } finally {
+                        try {
+                            tksIn.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    SSLContext c = SSLContext.getInstance(sslVersion);
+                    c.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+
+                    factory.useSslProtocol(c);
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException(e);
+                } catch (KeyStoreException e) {
+                    throw new RuntimeException(e);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                } catch (CertificateException e) {
+                    throw new RuntimeException(e);
+                } catch (UnrecoverableKeyException e) {
+                    throw new RuntimeException(e);
+                } catch (KeyManagementException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                // use default jdk truststore
+                try {
+                    factory.useSslProtocol();
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException(e);
+                } catch (KeyManagementException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        private InputStream getResource(String resourcePath) throws FileNotFoundException {
+            try {
+                return new FileInputStream(resourcePath);
+            } catch (FileNotFoundException e) {
+                InputStream in = this.getClass().getResourceAsStream(resourcePath);
+                if (in == null) {
+                    throw new FileNotFoundException(resourcePath);
+                }
+                return in;
+            }
+        }
     }
 }
