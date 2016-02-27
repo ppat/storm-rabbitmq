@@ -1,10 +1,10 @@
 package io.latent.storm.rabbitmq;
 
+import backtype.storm.tuple.Tuple;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-
-import backtype.storm.tuple.Tuple;
 
 /**
  * This interface describes an object that will perform the work of mapping
@@ -32,6 +32,7 @@ public abstract class TupleToMessage implements Serializable {
         determineRoutingKey(input),
         specifyContentType(input),
         specifyContentEncoding(input),
+        specifyExpiration(input),
         specifyMessagePersistence(input)
     );
   }
@@ -99,6 +100,16 @@ public abstract class TupleToMessage implements Serializable {
    */
   protected String specifyContentEncoding(Tuple input) {
     return null;
+  }
+
+  /**
+   * Specify whether the message should expire after an interval of sitting in the queue.
+   *
+   * @param input the incoming tuple
+   * @return an value for expiration if applicable
+   */
+  protected String specifyExpiration(Tuple input) {
+      return null;
   }
 
   /**
