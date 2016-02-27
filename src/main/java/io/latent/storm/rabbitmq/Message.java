@@ -1,10 +1,10 @@
 package io.latent.storm.rabbitmq;
 
+import com.rabbitmq.client.QueueingConsumer;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.rabbitmq.client.QueueingConsumer;
 
 public class Message {
   public static final Message NONE = new None();
@@ -25,9 +25,11 @@ public class Message {
                                    String routingKey,
                                    String contentType,
                                    String contentEncoding,
+                                   String expiration,
                                    boolean persistent) {
     return (body != null && exchangeName != null && exchangeName.length() > 0) ?
-        new MessageForSending(body, headers, exchangeName, routingKey, contentType, contentEncoding, persistent) :
+        new MessageForSending(body, headers, exchangeName, routingKey, contentType, contentEncoding, expiration,
+                persistent) :
         NONE;
   }
 
@@ -113,6 +115,7 @@ public class Message {
     private final String contentType;
     private final String contentEncoding;
     private final boolean persistent;
+    private final String expiration;
 
     private MessageForSending(byte[] body,
                               Map<String, Object> headers,
@@ -120,6 +123,7 @@ public class Message {
                               String routingKey,
                               String contentType,
                               String contentEncoding,
+                              String expiration,
                               boolean persistent) {
       super(body);
       this.headers = (headers != null) ? headers : new HashMap<String, Object>();
@@ -127,6 +131,7 @@ public class Message {
       this.routingKey = routingKey;
       this.contentType = contentType;
       this.contentEncoding = contentEncoding;
+      this.expiration = expiration;
       this.persistent = persistent;
     }
 
@@ -153,6 +158,10 @@ public class Message {
     public String getContentEncoding()
     {
       return contentEncoding;
+    }
+
+    public String getExpiration() {
+      return expiration;
     }
 
     public boolean isPersistent()
