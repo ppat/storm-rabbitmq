@@ -51,6 +51,11 @@ While the standard ```RabbitMQSpout``` above will deliver messages on an anchore
 Scheme scheme = new YourCustomMessageScheme();
 IRichSpout spout = new UnanchoredRabbitMQSpout(scheme);
 ```
+### Trident Spout
+```java
+Scheme scheme = new YourCustomMessageScheme();
+Config producerConf = new Config();
+TridentRabbitMqSpout spout = new TridentRabbitMqSpout(scheme, streamId, producerConf);
 
 ## MultiStream Spout
 
