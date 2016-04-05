@@ -1,18 +1,4 @@
-# Eclipse
-.classpath
-.project
-.settings/
-
-# Intellij
-.idea/
-*.iml
-*.iws
-
-# Mac
-.DS_Store
-
-# Maven
-logs/
 target/
-dist/
-bin/
+
+*.iml
+/bin/
