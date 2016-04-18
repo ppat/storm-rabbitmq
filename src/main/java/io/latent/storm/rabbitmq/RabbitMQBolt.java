@@ -1,19 +1,17 @@
 package io.latent.storm.rabbitmq;
 
-import java.util.Map;
-
+import org.apache.storm.task.OutputCollector;
+import org.apache.storm.task.TopologyContext;
+import org.apache.storm.topology.OutputFieldsDeclarer;
+import org.apache.storm.topology.base.BaseRichBolt;
+import org.apache.storm.tuple.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import backtype.storm.generated.Bolt;
-import backtype.storm.task.OutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseRichBolt;
-import backtype.storm.tuple.Tuple;
+import java.util.Map;
 
 /**
- * This is a simple {@link Bolt} for producing messages to RabbitMQ from a Storm
+ * This is a simple bolt for producing messages to RabbitMQ from a Storm
  * topology. It needs a {@link TupleToMessage} object to perform the real meat
  * of converting the incoming {@link Tuple} from a stream into a {@link Message}
  * to publish on RabbitMQ.
