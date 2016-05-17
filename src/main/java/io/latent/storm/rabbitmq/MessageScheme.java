@@ -1,9 +1,10 @@
 package io.latent.storm.rabbitmq;
 
-import backtype.storm.spout.Scheme;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.tuple.Fields;
+import org.apache.storm.spout.Scheme;
+import org.apache.storm.task.TopologyContext;
+import org.apache.storm.tuple.Fields;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +15,8 @@ public interface MessageScheme extends Scheme {
   void close();
 
   List<Object> deserialize(Message message);
+  
+  List<Object> deserialize(byte[] bytes);
 
   public static class Builder {
     public static MessageScheme from(final Scheme scheme) {
@@ -34,14 +37,20 @@ public interface MessageScheme extends Scheme {
 
         @Override
         public List<Object> deserialize(Message message) {
-          return scheme.deserialize(message.getBody());
+          return this.deserialize(message.getBody());
         }
 
         @Override
         public List<Object> deserialize(byte[] bytes) {
-          return scheme.deserialize(bytes);
+          ByteBuffer ser = ByteBuffer.wrap(bytes);
+          return scheme.deserialize(ser);
         }
 
+        @Override
+		public List<Object> deserialize(ByteBuffer ser) {
+		  return scheme.deserialize(ser);
+		}
+        
         @Override
         public Fields getOutputFields() {
           return scheme.getOutputFields();

@@ -4,7 +4,7 @@ import io.latent.storm.rabbitmq.config.ProducerConfig;
 
 import java.util.Map;
 
-import backtype.storm.tuple.Tuple;
+import org.apache.storm.tuple.Tuple;
 
 public abstract class TupleToMessageNonDynamic extends TupleToMessage
 {
