@@ -77,7 +77,6 @@ public class ConnectionConfig implements Serializable {
      * @param username
      * @param password
      * @param virtualHost
-     * @param heartbeat
      */
     public ConnectionConfig(final ConfigAvailableHosts hosts, String host, int port, String username, String password, String virtualHost, int heartBeat, final boolean ssl) {
       this.host = host;

@@ -1,8 +1,8 @@
 package io.latent.storm.rabbitmq;
 
-import backtype.storm.topology.ReportedFailedException;
 import com.rabbitmq.client.*;
 import io.latent.storm.rabbitmq.config.ConnectionConfig;
+import org.apache.storm.topology.ReportedFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
