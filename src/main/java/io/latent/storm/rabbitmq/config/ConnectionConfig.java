@@ -29,6 +29,7 @@ public class ConnectionConfig implements Serializable {
     private String virtualHost;
     private int heartBeat;
     private boolean ssl;
+    private boolean automaticRecoveryEnabled;
     // Backup hosts to try and connect to.
     private ConfigAvailableHosts highAvailabilityHosts = new ConfigAvailableHosts();
 
@@ -46,13 +47,13 @@ public class ConnectionConfig implements Serializable {
     public ConnectionConfig(String host,
                             String username,
                             String password) {
-        this(host, ConnectionFactory.DEFAULT_AMQP_PORT, username, password, ConnectionFactory.DEFAULT_VHOST, 10, false);
+        this(host, ConnectionFactory.DEFAULT_AMQP_PORT, username, password, ConnectionFactory.DEFAULT_VHOST, 10, false, false);
     }
     
     public ConnectionConfig(String host,
             String username,
             String password, boolean ssl) {
-        this(host, ConnectionFactory.DEFAULT_AMQP_PORT, username, password, ConnectionFactory.DEFAULT_VHOST, 10, ssl);
+        this(host, ConnectionFactory.DEFAULT_AMQP_PORT, username, password, ConnectionFactory.DEFAULT_VHOST, 10, ssl, false);
     }
 
     public ConnectionConfig(String host,
@@ -61,11 +62,11 @@ public class ConnectionConfig implements Serializable {
                             String password,
                             String virtualHost,
                             int heartBeat) {
-        this(host,port,username,password,virtualHost,heartBeat,false);
+        this(host,port,username,password,virtualHost,heartBeat,false, false);
     }
     
-    public ConnectionConfig(String host, int port, String username, String password, String virtualHost, int heartBeat, boolean ssl) {
-        this(new ConfigAvailableHosts(), host, port, username, password, virtualHost, heartBeat, ssl);
+    public ConnectionConfig(String host, int port, String username, String password, String virtualHost, int heartBeat, boolean ssl, boolean automaticRecoveryEnabled) {
+        this(new ConfigAvailableHosts(), host, port, username, password, virtualHost, heartBeat, ssl, automaticRecoveryEnabled);
       }
     
     /**
@@ -78,7 +79,7 @@ public class ConnectionConfig implements Serializable {
      * @param password
      * @param virtualHost
      */
-    public ConnectionConfig(final ConfigAvailableHosts hosts, String host, int port, String username, String password, String virtualHost, int heartBeat, final boolean ssl) {
+    public ConnectionConfig(final ConfigAvailableHosts hosts, String host, int port, String username, String password, String virtualHost, int heartBeat, final boolean ssl, final boolean automaticRecoveryEnabled) {
       this.host = host;
       this.port = port;
       this.username = username;
@@ -87,6 +88,7 @@ public class ConnectionConfig implements Serializable {
       this.heartBeat = heartBeat;
       this.ssl = ssl;
       this.highAvailabilityHosts = hosts;
+      this.automaticRecoveryEnabled = automaticRecoveryEnabled;
     }
     
     public ConfigAvailableHosts getHighAvailabilityHosts() {
@@ -136,6 +138,14 @@ public class ConnectionConfig implements Serializable {
         return this.ssl;
     }
 
+    public boolean isAutomaticRecoveryEnabled() {
+        return automaticRecoveryEnabled;
+    }
+
+    public void setAutomaticRecoveryEnabled(boolean automaticRecoveryEnabled) {
+        this.automaticRecoveryEnabled = automaticRecoveryEnabled;
+    }
+
     public ConnectionFactory asConnectionFactory() {
         ConnectionFactory factory = new ConnectionFactory();
         if (uri != null) {
@@ -155,6 +165,7 @@ public class ConnectionConfig implements Serializable {
             factory.setPassword(password);
             factory.setVirtualHost(virtualHost);
             factory.setRequestedHeartbeat(heartBeat);
+            factory.setAutomaticRecoveryEnabled(automaticRecoveryEnabled);
             if(ssl){
                 try {
                     factory.useSslProtocol();
@@ -182,7 +193,8 @@ public class ConnectionConfig implements Serializable {
                     getFromMap("rabbitmq.password", stormConfig, ConnectionFactory.DEFAULT_PASS),
                     getFromMap("rabbitmq.virtualhost", stormConfig, ConnectionFactory.DEFAULT_VHOST),
                     getFromMapAsInt("rabbitmq.heartbeat", stormConfig, ConnectionFactory.DEFAULT_HEARTBEAT),
-                    getFromMapAsBoolean("rabbitmq.ssl", stormConfig, false));
+                    getFromMapAsBoolean("rabbitmq.ssl", stormConfig, false),
+                    getFromMapAsBoolean("rabbitmq.automaticrecovery", stormConfig, false));
             }else{
               return new ConnectionConfig(getFromMap("rabbitmq.host", stormConfig, ConnectionFactory.DEFAULT_HOST),
                     getFromMapAsInt("rabbitmq.port", stormConfig, ConnectionFactory.DEFAULT_AMQP_PORT),
@@ -190,7 +202,8 @@ public class ConnectionConfig implements Serializable {
                     getFromMap("rabbitmq.password", stormConfig, ConnectionFactory.DEFAULT_PASS),
                     getFromMap("rabbitmq.virtualhost", stormConfig, ConnectionFactory.DEFAULT_VHOST),
                     getFromMapAsInt("rabbitmq.heartbeat", stormConfig, ConnectionFactory.DEFAULT_HEARTBEAT),
-                    getFromMapAsBoolean("rabbitmq.ssl", stormConfig, false));
+                    getFromMapAsBoolean("rabbitmq.ssl", stormConfig, false),
+                    getFromMapAsBoolean("rabbitmq.automaticrecovery", stormConfig, false));
             }
         }
     }
@@ -208,6 +221,7 @@ public class ConnectionConfig implements Serializable {
             addToMap("rabbitmq.heartbeat", map, heartBeat);
             addToMap("rabbitmq.ssl", map, ssl);
             addToMap("rabbitmq.ha.hosts", map, highAvailabilityHosts.toString());
+            addToMap("rabbitmq.automaticrecovery", map, automaticRecoveryEnabled);
         }
         return map;
     }
