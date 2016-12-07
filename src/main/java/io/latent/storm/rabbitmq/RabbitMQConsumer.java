@@ -4,6 +4,7 @@ import io.latent.storm.rabbitmq.config.ConnectionConfig;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -184,7 +185,7 @@ public class RabbitMQConsumer implements Serializable {
     }
   }
 
-  private Connection createConnection() throws IOException {
+  private Connection createConnection() throws IOException, TimeoutException {
     Connection connection = highAvailabilityHosts == null || highAvailabilityHosts.length == 0 
           ? connectionFactory.newConnection() 
           : connectionFactory.newConnection(highAvailabilityHosts);

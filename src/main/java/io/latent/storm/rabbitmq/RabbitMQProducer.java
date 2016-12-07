@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 public class RabbitMQProducer implements Serializable {
   private final Declarator declarator;
@@ -120,7 +121,7 @@ public class RabbitMQProducer implements Serializable {
     }
   }
 
-  private Connection createConnection() throws IOException {
+  private Connection createConnection() throws IOException, TimeoutException {
     ConnectionFactory connectionFactory = connectionConfig.asConnectionFactory();
     Connection connection = connectionConfig.getHighAvailabilityHosts().isEmpty() ? connectionFactory.newConnection()
         : connectionFactory.newConnection(connectionConfig.getHighAvailabilityHosts().toAddresses());
