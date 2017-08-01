@@ -25,9 +25,10 @@ public class Message {
                                    String routingKey,
                                    String contentType,
                                    String contentEncoding,
-                                   boolean persistent) {
+                                   boolean persistent,
+                                   Integer priority) {
     return (body != null && exchangeName != null && exchangeName.length() > 0) ?
-        new MessageForSending(body, headers, exchangeName, routingKey, contentType, contentEncoding, persistent) :
+        new MessageForSending(body, headers, exchangeName, routingKey, contentType, contentEncoding, persistent, priority) :
         NONE;
   }
 
@@ -113,6 +114,7 @@ public class Message {
     private final String contentType;
     private final String contentEncoding;
     private final boolean persistent;
+    private final Integer priority;
 
     private MessageForSending(byte[] body,
                               Map<String, Object> headers,
@@ -120,7 +122,8 @@ public class Message {
                               String routingKey,
                               String contentType,
                               String contentEncoding,
-                              boolean persistent) {
+                              boolean persistent,
+                              Integer priority) {
       super(body);
       this.headers = (headers != null) ? headers : new HashMap<String, Object>();
       this.exchangeName = exchangeName;
@@ -128,6 +131,7 @@ public class Message {
       this.contentType = contentType;
       this.contentEncoding = contentEncoding;
       this.persistent = persistent;
+      this.priority = priority;
     }
 
     public Map<String, Object> getHeaders()
@@ -158,6 +162,11 @@ public class Message {
     public boolean isPersistent()
     {
       return persistent;
+    }
+
+    public Integer getPriority()
+    {
+      return priority;
     }
   }
 }
