@@ -1,8 +1,8 @@
 package io.latent.storm.rabbitmq;
 
 import io.latent.storm.rabbitmq.config.ConsumerConfig;
-import org.apache.storm.spout.Scheme;
-import org.apache.storm.spout.SpoutOutputCollector;
+import backtype.storm.spout.Scheme;
+import backtype.storm.spout.SpoutOutputCollector;
 
 import java.util.List;
 

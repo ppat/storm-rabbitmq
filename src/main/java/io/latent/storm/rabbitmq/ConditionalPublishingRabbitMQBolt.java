@@ -1,7 +1,7 @@
 package io.latent.storm.rabbitmq;
 
 
-import org.apache.storm.tuple.Tuple;
+import backtype.storm.tuple.Tuple;
 
 /**
  * Simple extension of {@link io.latent.storm.rabbitmq.RabbitMQBolt} that provides the ability to determine whether a message should be published
