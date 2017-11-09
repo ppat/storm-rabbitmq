@@ -14,38 +14,38 @@ import java.util.List;
  * @author peter@latent.io
  */
 public class UnanchoredRabbitMQSpout extends RabbitMQSpout {
-  public UnanchoredRabbitMQSpout(Scheme scheme) {
-    super(scheme);
-  }
+    public UnanchoredRabbitMQSpout(Scheme scheme) {
+        super(scheme);
+    }
 
-  public UnanchoredRabbitMQSpout(Scheme scheme,
-                                 Declarator declarator) {
-    super(scheme, declarator);
-  }
+    public UnanchoredRabbitMQSpout(Scheme scheme,
+                                   Declarator declarator) {
+        super(scheme, declarator);
+    }
 
-  @Override
-  protected RabbitMQConsumer loadConsumer(Declarator declarator,
-                                          ErrorReporter reporter,
-                                          ConsumerConfig config) {
-    return new UnanchoredConsumer(config.getConnectionConfig(),
-                                  config.getPrefetchCount(),
-                                  config.getQueueName(),
-                                  config.isRequeueOnFail(),
-                                  declarator,
-                                  reporter);
-  }
+    @Override
+    protected RabbitMQConsumer loadConsumer(Declarator declarator,
+                                            ErrorReporter reporter,
+                                            ConsumerConfig config) {
+        return new UnanchoredConsumer(config.getConnectionConfig(),
+                config.getPrefetchCount(),
+                config.getQueueName(),
+                config.isRequeueOnFail(),
+                declarator,
+                reporter);
+    }
 
-  @Override
-  public void ack(Object msgId) { /* no op */ }
+    @Override
+    public void ack(Object msgId) { /* no op */ }
 
-  @Override
-  public void fail(Object msgId) { /* no op */ }
+    @Override
+    public void fail(Object msgId) { /* no op */ }
 
-  @Override
-  protected List<Integer> emit(List<Object> tuple,
-                               Message message,
-                               SpoutOutputCollector spoutOutputCollector) {
-    // don't anchor with msgId
-    return spoutOutputCollector.emit(tuple);
-  }
+    @Override
+    protected List<Integer> emit(List<Object> tuple,
+                                 Message message,
+                                 SpoutOutputCollector spoutOutputCollector) {
+        // don't anchor with msgId
+        return spoutOutputCollector.emit(tuple);
+    }
 }

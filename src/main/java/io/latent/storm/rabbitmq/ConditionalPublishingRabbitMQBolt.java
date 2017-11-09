@@ -22,7 +22,7 @@ public class ConditionalPublishingRabbitMQBolt extends RabbitMQBolt {
 
     @Override
     public void execute(final Tuple tuple) {
-        if(shouldPublish(tuple)) {
+        if (shouldPublish(tuple)) {
             publish(tuple);
         }
         acknowledge(tuple);

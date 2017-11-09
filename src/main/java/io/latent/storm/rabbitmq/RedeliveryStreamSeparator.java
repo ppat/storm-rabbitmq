@@ -11,21 +11,21 @@ import java.util.List;
  * @author peter@latent.io
  */
 public class RedeliveryStreamSeparator implements MultiStreamSplitter {
-  public static final String INITIAL_DELIVERY_STREAM = "initial_delivery";
-  public static final String REDELIVERY_STREAM = "redelivery";
+    public static final String INITIAL_DELIVERY_STREAM = "initial_delivery";
+    public static final String REDELIVERY_STREAM = "redelivery";
 
-  private static final List<String> streams = Collections.unmodifiableList(Arrays.asList(INITIAL_DELIVERY_STREAM,
-                                                                                         REDELIVERY_STREAM));
+    private static final List<String> streams = Collections.unmodifiableList(Arrays.asList(INITIAL_DELIVERY_STREAM,
+            REDELIVERY_STREAM));
 
-  @Override
-  public List<String> streamNames() {
-    return streams;
-  }
+    @Override
+    public List<String> streamNames() {
+        return streams;
+    }
 
-  @Override
-  public String selectStream(List<Object> tuple,
-                             Message message) {
-    Message.DeliveredMessage deliveredMessage = (Message.DeliveredMessage) message;
-    return deliveredMessage.isRedelivery() ? REDELIVERY_STREAM : INITIAL_DELIVERY_STREAM;
-  }
+    @Override
+    public String selectStream(List<Object> tuple,
+                               Message message) {
+        Message.DeliveredMessage deliveredMessage = (Message.DeliveredMessage) message;
+        return deliveredMessage.isRedelivery() ? REDELIVERY_STREAM : INITIAL_DELIVERY_STREAM;
+    }
 }
