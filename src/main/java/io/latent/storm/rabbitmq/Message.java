@@ -1,10 +1,10 @@
 package io.latent.storm.rabbitmq;
 
+import com.rabbitmq.client.Delivery;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.rabbitmq.client.QueueingConsumer;
 
 public class Message {
   public static final Message NONE = new None();
@@ -15,7 +15,7 @@ public class Message {
     this.body = body;
   }
 
-  public static Message forDelivery(QueueingConsumer.Delivery delivery) {
+  public static Message forDelivery(Delivery delivery) {
     return (delivery != null) ? new DeliveredMessage(delivery) : NONE;
   }
 
@@ -27,8 +27,8 @@ public class Message {
                                    String contentEncoding,
                                    boolean persistent) {
     return (body != null && exchangeName != null && exchangeName.length() > 0) ?
-        new MessageForSending(body, headers, exchangeName, routingKey, contentType, contentEncoding, persistent) :
-        NONE;
+            new MessageForSending(body, headers, exchangeName, routingKey, contentType, contentEncoding, persistent) :
+            NONE;
   }
 
   public byte[] getBody() {
@@ -55,7 +55,7 @@ public class Message {
     private final String type;
     private final String userId;
 
-    private DeliveredMessage(QueueingConsumer.Delivery delivery) {
+    private DeliveredMessage(Delivery delivery) {
       super(delivery.getBody());
       redelivery = delivery.getEnvelope().isRedeliver();
       deliveryTag = delivery.getEnvelope().getDeliveryTag();
@@ -77,24 +77,77 @@ public class Message {
       userId = delivery.getProperties().getUserId();
     }
 
-    public boolean isRedelivery() { return redelivery; }
-    public long getDeliveryTag() { return deliveryTag; }
-    public String getRoutingKey() { return routingKey; }
-    public String getExchange() { return exchange; }
-    public String getClassName() { return className;}
-    public String getClusterId(){ return clusterId; }
-    public String getContentEncoding() { return contentEncoding; }
-    public String getContentType() { return contentType; }
-    public String getCorrelationId() { return correlationId; }
-    public Integer getDeliveryMode() { return deliveryMode; }
-    public String getExpiration() { return expiration; }
-    public Map<String, Object> getHeaders() { return headers; }
-    public String getMessageId() { return messageId; }
-    public Integer getPriority() { return priority; }
-    public String getReplyTo() { return replyTo; }
-    public Date getTimestamp() { return timestamp; }
-    public String getType() { return type; }
-    public String getUserId() { return userId; }
+    public boolean isRedelivery() {
+      return redelivery;
+    }
+
+    public long getDeliveryTag() {
+      return deliveryTag;
+    }
+
+    public String getRoutingKey() {
+      return routingKey;
+    }
+
+    public String getExchange() {
+      return exchange;
+    }
+
+    public String getClassName() {
+      return className;
+    }
+
+    public String getClusterId() {
+      return clusterId;
+    }
+
+    public String getContentEncoding() {
+      return contentEncoding;
+    }
+
+    public String getContentType() {
+      return contentType;
+    }
+
+    public String getCorrelationId() {
+      return correlationId;
+    }
+
+    public Integer getDeliveryMode() {
+      return deliveryMode;
+    }
+
+    public String getExpiration() {
+      return expiration;
+    }
+
+    public Map<String, Object> getHeaders() {
+      return headers;
+    }
+
+    public String getMessageId() {
+      return messageId;
+    }
+
+    public Integer getPriority() {
+      return priority;
+    }
+
+    public String getReplyTo() {
+      return replyTo;
+    }
+
+    public Date getTimestamp() {
+      return timestamp;
+    }
+
+    public String getType() {
+      return type;
+    }
+
+    public String getUserId() {
+      return userId;
+    }
   }
 
   public static class None extends Message {
@@ -103,7 +156,11 @@ public class Message {
     }
 
     @Override
-    public byte[] getBody() { throw new UnsupportedOperationException(); };
+    public byte[] getBody() {
+      throw new UnsupportedOperationException();
+    }
+
+    ;
   }
 
   public static class MessageForSending extends Message {
@@ -130,33 +187,27 @@ public class Message {
       this.persistent = persistent;
     }
 
-    public Map<String, Object> getHeaders()
-    {
+    public Map<String, Object> getHeaders() {
       return headers;
     }
 
-    public String getExchangeName()
-    {
+    public String getExchangeName() {
       return exchangeName;
     }
 
-    public String getRoutingKey()
-    {
+    public String getRoutingKey() {
       return routingKey;
     }
 
-    public String getContentType()
-    {
+    public String getContentType() {
       return contentType;
     }
 
-    public String getContentEncoding()
-    {
+    public String getContentEncoding() {
       return contentEncoding;
     }
 
-    public boolean isPersistent()
-    {
+    public boolean isPersistent() {
       return persistent;
     }
   }

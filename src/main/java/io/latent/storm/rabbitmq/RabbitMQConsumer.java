@@ -1,22 +1,13 @@
 package io.latent.storm.rabbitmq;
 
+import com.rabbitmq.client.*;
 import io.latent.storm.rabbitmq.config.ConnectionConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.concurrent.TimeoutException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.rabbitmq.client.Address;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.ConsumerCancelledException;
-import com.rabbitmq.client.QueueingConsumer;
-import com.rabbitmq.client.ShutdownListener;
-import com.rabbitmq.client.ShutdownSignalException;
 
 /**
  * An abstraction on RabbitMQ client API to encapsulate interaction with RabbitMQ and de-couple Storm API from RabbitMQ API.
@@ -24,7 +15,7 @@ import com.rabbitmq.client.ShutdownSignalException;
  * @author peter@latent.io
  */
 public class RabbitMQConsumer implements Serializable {
-  public static final long MS_WAIT_FOR_MESSAGE = 1L;
+  //public static final long MS_WAIT_FOR_MESSAGE = 1L;
 
   private final ConnectionFactory connectionFactory;
   private final Address[] highAvailabilityHosts;
@@ -37,7 +28,7 @@ public class RabbitMQConsumer implements Serializable {
 
   private Connection connection;
   private Channel channel;
-  private QueueingConsumer consumer;
+  private RpcServer.RpcConsumer consumer;
   private String consumerTag;
 
   public RabbitMQConsumer(ConnectionConfig connectionConfig,
@@ -61,7 +52,7 @@ public class RabbitMQConsumer implements Serializable {
     reinitIfNecessary();
     if (consumerTag == null || consumer == null) return Message.NONE;
     try {
-      return Message.forDelivery(consumer.nextDelivery(MS_WAIT_FOR_MESSAGE));
+      return Message.forDelivery(consumer.nextDelivery());
     } catch (ShutdownSignalException sse) {
       reset();
       logger.error("shutdown signal received while attempting to get next message", sse);
@@ -140,7 +131,7 @@ public class RabbitMQConsumer implements Serializable {
       // run any declaration prior to queue consumption
       declarator.execute(channel);
 
-      consumer = new QueueingConsumer(channel);
+      consumer = new DefaultRpcConsumer(channel);
       consumerTag = channel.basicConsume(queueName, isAutoAcking(), consumer);
     } catch (Exception e) {
       reset();
@@ -186,16 +177,13 @@ public class RabbitMQConsumer implements Serializable {
   }
 
   private Connection createConnection() throws IOException, TimeoutException {
-    Connection connection = highAvailabilityHosts == null || highAvailabilityHosts.length == 0 
-          ? connectionFactory.newConnection() 
-          : connectionFactory.newConnection(highAvailabilityHosts);
-    connection.addShutdownListener(new ShutdownListener() {
-      @Override
-      public void shutdownCompleted(ShutdownSignalException cause) {
-        logger.error("shutdown signal received", cause);
-        reporter.reportError(cause);
-        reset();
-      }
+    Connection connection = highAvailabilityHosts == null || highAvailabilityHosts.length == 0
+            ? connectionFactory.newConnection()
+            : connectionFactory.newConnection(highAvailabilityHosts);
+    connection.addShutdownListener((ShutdownSignalException cause)-> {
+      logger.error("shutdown signal received", cause);
+      reporter.reportError(cause);
+      reset();
     });
     logger.info("connected to rabbitmq: " + connection + " for " + queueName);
     return connection;
