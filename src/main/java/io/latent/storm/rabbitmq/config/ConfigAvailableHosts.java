@@ -10,6 +10,7 @@ import com.rabbitmq.client.Address;
 /**
  * Simple configuration class to allow users to specify a set hosts to connect
  * to for high availability purposes.
+ *
  */
 public class ConfigAvailableHosts implements Serializable {
 
@@ -23,6 +24,7 @@ public class ConfigAvailableHosts implements Serializable {
     private final Map<String, Integer> hostsMap = new TreeMap<String, Integer>();
 
     /**
+     * 
      * @return The map of hostname to port we'll use to connect to
      */
     public Map<String, Integer> getHostsMap() {
@@ -30,16 +32,18 @@ public class ConfigAvailableHosts implements Serializable {
     }
 
     /**
+     * 
      * @return Whether or not there are any configured high availability hosts
-     * in this config
+     *         in this config
      */
     public boolean isEmpty() {
         return hostsMap.isEmpty();
     }
 
     /**
+     * 
      * @return The {@link Map} of RabbitMQ hosts, converted to the necessary
-     * {@link Address} array
+     *         {@link Address} array
      */
     public Address[] toAddresses() {
         final Address[] addresses = new Address[hostsMap.size()];
