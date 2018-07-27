@@ -32,7 +32,8 @@ public abstract class TupleToMessage implements Serializable {
         determineRoutingKey(input),
         specifyContentType(input),
         specifyContentEncoding(input),
-        specifyMessagePersistence(input)
+        specifyMessagePersistence(input),
+        extractPriority(input)
     );
   }
 
@@ -113,5 +114,9 @@ public abstract class TupleToMessage implements Serializable {
    */
   protected boolean specifyMessagePersistence(Tuple input) {
     return false;
+  }
+
+  protected Integer extractPriority(Tuple input) {
+    return 1;
   }
 }

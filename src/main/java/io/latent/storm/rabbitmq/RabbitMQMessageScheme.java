@@ -40,7 +40,7 @@ public class RabbitMQMessageScheme implements MessageScheme {
     Message.DeliveredMessage dm = (Message.DeliveredMessage)message;
     Envelope envelope = createEnvelope(dm);
     Properties properties = createProperties(dm);
-    List<Object> payloadValues = deserialize(ByteBuffer.wrap(dm.getBody()));
+    List<Object> payloadValues = deserialize(ByteBuffer.wrap(message.getBody()));
 
     List<Object> values = new ArrayList<Object>();
     values.addAll(payloadValues);
