@@ -4,9 +4,9 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import com.rabbitmq.client.LongString;
-import backtype.storm.spout.Scheme;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.tuple.Fields;
+import org.apache.storm.spout.Scheme;
+import org.apache.storm.task.TopologyContext;
+import org.apache.storm.tuple.Fields;
 
 import java.io.Serializable;
 
@@ -40,7 +40,7 @@ public class RabbitMQMessageScheme implements MessageScheme {
     Message.DeliveredMessage dm = (Message.DeliveredMessage)message;
     Envelope envelope = createEnvelope(dm);
     Properties properties = createProperties(dm);
-    List<Object> payloadValues = deserialize(ByteBuffer.wrap(dm.getBody()));
+    List<Object> payloadValues = deserialize(ByteBuffer.wrap(message.getBody()));
 
     List<Object> values = new ArrayList<Object>();
     values.addAll(payloadValues);

@@ -10,7 +10,7 @@ LICENSE: MIT License
 
 ## Pre-requisites
 
-You will need an implementation of ```backtype.storm.spout.Scheme``` to deserialize a RabbitMQ message.
+You will need an implementation of ```org.apache.storm.spout.Scheme``` to deserialize a RabbitMQ message.
 
 
 ## RabbitMQ Spout
@@ -164,7 +164,7 @@ The standard backtype message scheme only allows access to the payload of a mess
 
 When constructing a RabbitMQMessageScheme you need to provide 3 pieces of information:
 
-* an implementation of ```backtype.storm.spout.Scheme``` to deserialize a RabbitMQ message payload.
+* an implementation of ```org.apache.storm.spout.Scheme``` to deserialize a RabbitMQ message payload.
 * the tuple field name to use for RabbitMQ message envelope info
 * the tuple field name to use for the RabbitMQ properties info
 

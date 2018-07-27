@@ -1,7 +1,7 @@
 package io.latent.storm.rabbitmq;
 
 import io.latent.storm.rabbitmq.config.ProducerConfig;
-import backtype.storm.tuple.Tuple;
+import org.apache.storm.tuple.Tuple;
 
 import java.util.Map;
 

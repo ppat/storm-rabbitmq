@@ -1,6 +1,6 @@
 package io.latent.storm.rabbitmq;
 
-import backtype.storm.tuple.Tuple;
+import org.apache.storm.tuple.Tuple;
 
 import java.io.Serializable;
 import java.util.HashMap;

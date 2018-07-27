@@ -1,8 +1,8 @@
 package io.latent.storm.rabbitmq;
 
-import backtype.storm.spout.Scheme;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.tuple.Fields;
+import org.apache.storm.spout.Scheme;
+import org.apache.storm.task.TopologyContext;
+import org.apache.storm.tuple.Fields;
 
 import java.nio.ByteBuffer;
 import java.util.List;

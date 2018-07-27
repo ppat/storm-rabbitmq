@@ -1,5 +1,6 @@
 package io.latent.storm.rabbitmq;
 
+import com.rabbitmq.client.*;
 import io.latent.storm.rabbitmq.config.ConnectionConfig;
 
 import java.io.IOException;
@@ -9,14 +10,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rabbitmq.client.Address;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.ConsumerCancelledException;
 import com.rabbitmq.client.QueueingConsumer;
-import com.rabbitmq.client.ShutdownListener;
-import com.rabbitmq.client.ShutdownSignalException;
 
 /**
  * An abstraction on RabbitMQ client API to encapsulate interaction with RabbitMQ and de-couple Storm API from RabbitMQ API.
@@ -147,6 +141,11 @@ public class RabbitMQConsumer implements Serializable {
       logger.error("could not open listener on queue " + queueName);
       reporter.reportError(e);
     }
+  }
+
+  public void restartChannel() throws Exception{
+    channel.close();
+    channel = connection.createChannel();
   }
 
   protected boolean isAutoAcking() {
